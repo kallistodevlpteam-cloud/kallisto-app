@@ -11,6 +11,14 @@ These instructions supplement the repository guidelines preserved in
 - Do not change the parent React checkout's remote or include its unrelated work.
 - The repository URL and workflow in this workspace override the older parent
   repository identity in inherited references.
+- User rule: use Git/GitHub for version control and Vercel for deployment.
+  Prefer the user's existing authorized credentials or connected accounts;
+  do not create replacement repositories, hosting projects, or tokens merely
+  because an interactive login was cancelled. Verify actual write access.
+- The private credential export includes a Vercel token but explicitly records
+  the GitHub token as unavailable. Never treat one service's token as credentials
+  for another. If GitHub write credentials are absent, report the exact blocker
+  and retain local commits until access is provided.
 
 ## Frontend and backend locations
 

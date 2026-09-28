@@ -29,6 +29,24 @@ tokens in the remote URL or tracked files. The initial import is committed as
 `Codex <codex@local>`; configure your own local Git identity before making your
 own commits if needed.
 
+The user requires Git/GitHub for version control and Vercel for deployments.
+Use an existing authorized API token or connected account when available rather
+than repeatedly opening interactive login prompts. Keep tokens out of terminal
+output, Git configuration, command-line arguments, and commits. Load tokens
+through trusted credential tooling or directly from a user-designated private
+file in memory when invoking the appropriate service.
+
+At setup, the local export explicitly reported **GitHub token unavailable**;
+noninteractive credential lookup also returned none, and the connected GitHub
+account reported `push: false` for this repository. A Vercel token is present in
+the ignored original export, but it cannot authorize GitHub operations. The
+initial local commit is ready; publication requires GitHub write access.
+
+Vercel is the required hosting provider. Use the token only with Vercel services
+when deploying this app. Legacy Vercel project links in the export belong to the
+earlier application and must not be assumed to identify this Flutter project.
+No Vercel project was linked or deployed during repository setup.
+
 ## Private local configuration
 
 Never commit `.env`, `firebase-config.json`, `backend/.env`,
