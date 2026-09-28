@@ -27,10 +27,20 @@ below for current use; do not run emulators for the user's preview.
   intent keys, and queues an inbox notification intent without claiming delivery.
 - Current checks: Flutter analyzer passed; 38 Flutter tests passed; backend
   typecheck/lint/build passed; 41 backend tests passed, 8 emulator tests skipped.
-  Live-config Flutter release build passed. No production test records were added.
-- Live authenticated reload/settings/provider testing remains pending a private
-  real-account sign-in. The missing approved live enrollment notice prevents new
-  client enrollment. Historical synthetic results below do not prove live login.
+  Live-config Flutter release build passed.
+- Following the user's explicit autonomous-testing authorization, a dedicated
+  `kallisto-qa-…@example.test` identity was created through the real Firebase signup
+  UI. Signup → full reload preserved authentication; explicit sign-out → normal
+  email/password sign-in → another full reload also preserved authentication.
+  The first rapid automated sign-in submission failed; refilling each field and
+  allowing the Flutter form to settle before submission succeeded. No credential
+  value was written to logs, evidence or tracked files.
+- Evidence: [restored live session](evidence/live-firebase-session-restored.png).
+  This proves Auth persistence, not completed workspace enrollment. The missing
+  approved live enrollment notice still blocks enrollment and downstream live
+  client-workspace testing. No business role, approved notice or policy was seeded.
+  The QA identity remains signed in for continued testing; real Firebase is used,
+  and ports 8088/9099 have no emulator listeners.
 
 
 ## Working now

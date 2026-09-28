@@ -91,3 +91,9 @@ verification. Do not start emulators. `run-client.ps1` uses the public live
 configuration and stable localhost:8080 origin. Production policies and records
 must never be replaced with synthetic fixtures. Unit/widget test doubles are
 isolated tests, not the running application's data source.
+
+The user explicitly authorized autonomous testing, including performing login
+tests without asking them to sign in. Use dedicated clearly identified QA
+identities and normal application flows on real Firebase. Do not repeatedly ask
+for permission already granted. This does not fabricate an approved enrollment
+notice, verified business, payment or another participant's consent.

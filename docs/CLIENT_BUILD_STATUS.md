@@ -64,7 +64,10 @@ the actual disclosure checkbox before sending. Shared enquiries include a
 durable notification intent; notification transport is not yet delivered.
 
 Live preview uses project kallisto-db1, localhost:8080 and API localhost:4000.
-Real sign-in/reload verification is pending the user's private sign-in. Enrollment
-is blocked by the absence of an approved live enrollment notice; no notice or
-construction policy was fabricated. Native Firebase registration and Vercel
-release validation remain outstanding.
+With the user's autonomous-testing authorization, a dedicated real Firebase QA
+identity passed signup/reload and sign-out/sign-in/reload in the live browser.
+See evidence/live-firebase-session-restored.png. Enrollment is still blocked by
+the absence of an approved live enrollment notice; no notice, business approval
+or construction policy was fabricated. Native Firebase registration and Vercel
+release validation remain outstanding. Do not request the user's login again for
+QA work that can use the dedicated test identity.
