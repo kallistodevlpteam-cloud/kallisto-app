@@ -16,9 +16,9 @@ doubles are isolated checks. Historical emulator evidence is not live evidence.
 | C04 Intake | ClientIntakePage / inputs, prepare, pause, resume | Versioned core manual fields; full 77-field editors, voice/text/Odin remain |
 | C05 Review | BriefReviewPage / requirements, confirm | Immutable displayed hash; canonical intake review deep link remains |
 | C06 Discovery | ClientProvidersPage / providers | Published safe projection, current eligibility, bounded filtering/pagination; comparison remains |
-| C07 Profile/share | ClientProvidersPage / providers/:id | Safe profile only; portfolio, exact disclosure preview and sharing remain |
-| C08 Enquiries | Not implemented | Own frozen enquiries and paging |
-| C09 Enquiry/offers | Not implemented | Exact offer getters/comparison/selection and conversations |
+| C07 Profile/share | ClientProvidersPage, ShareBriefPanel / providers/:id, share-preview, share | Exact minimal disclosure and guarded idempotent share; portfolio/expanded disclosure/attachments remain |
+| C08 Enquiries | ClientEnquiriesPage / enquiries | Own source-authorized frozen enquiries and paging; status filters remain |
+| C09 Enquiry/offers | ClientEnquiriesPage / enquiries/:id | Shared details viewer; exact offer getters/comparison/selection and conversations remain |
 | C10 Overview | ProjectOverviewPage / project detail | Basic project/brief/policy state; modules remain |
 | C11 Documents | Not implemented | Submitted immutable versions, protected bytes, exact decisions |
 | C12 BOQ | Not implemented | Baselines, variations, exact review and non-overlapping totals |
@@ -56,6 +56,12 @@ Provider tests cover safe field projection, category/coverage filtering, old
 eligibility pointers, expiration and invalid queries. Neither test suite creates
 production records. Full per-screen success/empty/error/offline/stale/denied and
 device acceptance remains required before marking any complete phase.
+
+Sharing tests additionally prove no-write previews, private-address/history
+exclusion, changed-version/hash rejection, recipient revocation, duplicate
+intent deduplication and no project membership grant. The Flutter test requires
+the actual disclosure checkbox before sending. Shared enquiries include a
+durable notification intent; notification transport is not yet delivered.
 
 Live preview uses project kallisto-db1, localhost:8080 and API localhost:4000.
 Real sign-in/reload verification is pending the user's private sign-in. Enrollment

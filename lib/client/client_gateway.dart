@@ -13,6 +13,7 @@ import 'client_models.dart';
 import 'workflow_models.dart';
 import 'settings_models.dart';
 import 'provider_models.dart';
+import 'sharing_models.dart';
 
 String clientIntentId() => List.generate(
   16,
@@ -20,6 +21,15 @@ String clientIntentId() => List.generate(
 ).join();
 
 abstract class ClientGateway {
+  Future<EnquiryPage> enquiries({String? cursor}) => throw UnimplementedError();
+  Future<ClientEnquiry> enquiry(String id) => throw UnimplementedError();
+  Future<BriefDisclosure> previewShare(
+    String projectId,
+    String recipient,
+    RequirementView brief,
+  ) => throw UnimplementedError();
+  Future<String> shareBrief(BriefDisclosure preview, String key) =>
+      throw UnimplementedError();
   Future<ProviderPage> providers({
     String? category,
     String? coverage,
@@ -64,6 +74,52 @@ abstract class ClientGateway {
 }
 
 class FirebaseClientGateway implements ClientGateway {
+  @override
+  Future<EnquiryPage> enquiries({String? cursor}) async =>
+      EnquiryPage.fromJson(await _get('/v1/enquiries', cursor: cursor));
+  @override
+  Future<ClientEnquiry> enquiry(String id) async => ClientEnquiry.fromJson(
+    await _get('/v1/enquiries/${Uri.encodeComponent(id)}'),
+  );
+  @override
+  Future<BriefDisclosure> previewShare(
+    String projectId,
+    String recipient,
+    RequirementView brief,
+  ) async => BriefDisclosure.fromJson(
+    projectId,
+    await _get(
+      '/v1/projects/${Uri.encodeComponent(projectId)}/share-preview',
+      method: 'POST',
+      payload: {
+        'provider_uid': recipient,
+        'requirement_version_id': brief.versionId,
+        'requirement_content_hash': brief.hash,
+      },
+    ),
+  );
+  @override
+  Future<String> shareBrief(BriefDisclosure preview, String key) async =>
+      stringValue(
+        objectValue(
+          await _get(
+            '/v1/projects/${Uri.encodeComponent(preview.projectId)}/share',
+            method: 'POST',
+            commandKey: key,
+            payload: {
+              'provider_uid': preview.recipient,
+              'requirement_version_id': preview.versionId,
+              'requirement_content_hash': preview.briefHash,
+              'disclosure_selection': preview.selection,
+              'disclosure_manifest_hash': preview.manifestHash,
+              'disclosure_policy_ref': preview.policy,
+              'expected_project_version': preview.projectVersion,
+              'explicit_confirmation': true,
+            },
+          ),
+        ),
+        'enquiry_id',
+      );
   @override
   Future<ProviderPage> providers({
     String? category,

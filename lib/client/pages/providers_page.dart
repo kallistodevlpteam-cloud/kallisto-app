@@ -3,6 +3,7 @@ import '../../design_system/components.dart';
 import '../client_gateway.dart';
 import '../client_models.dart';
 import '../provider_models.dart';
+import '../widgets/share_brief_panel.dart';
 
 class ClientProvidersPage extends StatefulWidget {
   const ClientProvidersPage({
@@ -58,12 +59,13 @@ class _ClientProvidersPageState extends State<ClientProvidersPage> {
         });
       }
     } on ClientFailure catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = error.message;
           _items = [];
           _cursor = null;
         });
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _error = 'Could not load providers. Please retry.');
@@ -107,9 +109,7 @@ class _ClientProvidersPageState extends State<ClientProvidersPage> {
               child: const Text('View profile'),
             ),
           if (widget.providerId != null)
-            const Text(
-              'Exact brief sharing and portfolio viewing are still being connected. Opening a profile does not share your project.',
-            ),
+            ShareBriefPanel(gateway: widget.gateway, provider: provider),
         ],
       ),
     ),
@@ -118,6 +118,14 @@ class _ClientProvidersPageState extends State<ClientProvidersPage> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      if (widget.providerId == null)
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => Navigator.pushNamed(context, '/client/enquiries'),
+            child: const Text('Your enquiries'),
+          ),
+        ),
       if (widget.providerId != null)
         TextButton.icon(
           onPressed: () => Navigator.pop(context),

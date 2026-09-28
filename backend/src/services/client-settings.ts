@@ -88,7 +88,7 @@ export class ClientSettingsService {
       if (user) tx.set(`users/${uid}`, {...user, preferred_language:values.language ?? values.preferred_language,
         ...(section === 'language_region' ? {preferred_timezone:values.timezone} : {}),
         row_version:Number(user.row_version ?? 0)+1, updated_at:this.store.timestamp(), updated_by_uid:uid});
-      tx.create(`audit_events/${command}`, {...metadata,event_id:command,actor_uid:uid,operation:'PREFERENCES_SAVE',resource_type:'user_preferences',resource_id:preferenceKey(uid,section),result:'committed'});
+      tx.create(`audit_events/${command}`, {...metadata,audit_id:command,actor_uid:uid,operation:'PREFERENCES_SAVE',resource_scope:{kind:'user',key:uid},outcome:'allowed',correlation_id:key,after_ref:{resource_id:preferenceKey(uid,section),revision:current.row_version+1}});
       tx.create(`idempotency_records/${command}`, {...metadata,command_key:command,actor_uid:uid,operation:'PREFERENCES_SAVE',resource_key:preferenceKey(uid,section),request_hash:hash(data),status:'committed',result_ref:{section,row_version:current.row_version+1}});
     });
     // Reauthorize and return current preferences rather than an old cached private DTO.

@@ -24,11 +24,20 @@ export class ProviderDirectory {
     const categories=z.array(z.string()).safeParse(verification.category_codes);
     const coverage=z.object({region_codes:z.array(z.string())}).safeParse(verification.coverage);
     if (!categories.success || !coverage.success) return null;
-    return {provider_id:profile.profile_id,name:profile.name,summary:profile.summary,
+    return {provider_id:profile.profile_id,recipient_provider_uid:principal.owner_uid,name:profile.name,summary:profile.summary,
       service_codes:profile.service_codes.filter(code=>categories.data.includes(code)),
       coverage_codes:profile.coverage_codes.filter(code=>coverage.data.region_codes.includes(code)),
       verified_categories:profile.verification_badge.category_codes.filter(code=>categories.data.includes(code)),
       verification_state:'approved'};
+  }
+  async recipient(tx:RecordTransaction, uid:string) {
+    const access=await tx.get(`user_access/${parse(id,uid)}`);
+    if (!access || !id.safeParse(access.provider_id).success) throw new ServiceError('NOT_FOUND',404);
+    const profiles=await tx.list({collection:'published_profiles',filters:[['subject_type','provider'],['subject_id',access.provider_id],['publication_status','published']],limit:2});
+    if(profiles.length!==1) throw new ServiceError('NOT_FOUND',404);
+    const safe=await this.visible(tx,profiles[0]!);
+    if(!safe || safe.recipient_provider_uid!==uid)throw new ServiceError('NOT_FOUND',404);
+    return safe;
   }
   async list(uid:string, input:unknown) {
     const query=parse(providerQuery,input);

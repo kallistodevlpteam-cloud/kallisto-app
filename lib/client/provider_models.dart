@@ -8,8 +8,9 @@ class LeadProvider {
     this.services,
     this.coverage,
     this.qualifications,
+    this.recipientUid,
   );
-  final String id, name, summary;
+  final String id, name, summary, recipientUid;
   final List<String> services, coverage, qualifications;
   factory LeadProvider.fromJson(Object? source) {
     final row = objectValue(source);
@@ -21,6 +22,7 @@ class LeadProvider {
       list('service_codes'),
       list('coverage_codes'),
       list('verified_categories'),
+      stringValue(row, 'recipient_provider_uid'),
     );
   }
 }

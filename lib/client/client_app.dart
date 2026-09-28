@@ -6,6 +6,7 @@ import 'client_models.dart';
 import 'pages/account_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/providers_page.dart';
+import 'pages/enquiries_page.dart';
 import 'pages/home_page.dart';
 import 'pages/projects_page.dart';
 import 'pages/intake_page.dart';
@@ -70,6 +71,11 @@ class _ClientShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final uri = Uri.parse(path);
     final parts = uri.pathSegments;
+    final enquiryRoute =
+        parts.length >= 2 &&
+        parts.length <= 3 &&
+        parts[0] == 'client' &&
+        parts[1] == 'enquiries';
     final providerDetail =
         parts.length == 3 && parts[0] == 'client' && parts[1] == 'providers';
     final settingsPage =
@@ -90,7 +96,9 @@ class _ClientShell extends StatelessWidget {
         parts[0] == 'client' &&
         parts[1] == 'projects' &&
         parts[3] == 'requirements';
-    final index = providerDetail
+    final index = enquiryRoute
+        ? 2
+        : providerDetail
         ? 2
         : settingsPage
         ? 4
@@ -112,7 +120,15 @@ class _ClientShell extends StatelessWidget {
     }
 
     final Widget page;
-    if (providerDetail) {
+    if (enquiryRoute) {
+      page = controller.connection != ClientConnection.ready
+          ? ConnectionPanel(controller: controller)
+          : ClientEnquiriesPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              enquiryId: parts.length == 3 ? parts[2] : null,
+            );
+    } else if (providerDetail) {
       page = controller.connection != ClientConnection.ready
           ? ConnectionPanel(controller: controller)
           : ClientProvidersPage(

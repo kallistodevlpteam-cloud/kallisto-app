@@ -21,9 +21,12 @@ below for current use; do not run emulators for the user's preview.
   implemented server-side but their full UI is not yet wired.
 - Added provider directory/profile reads with current eligibility and expiry
   checks, safe field projection, category/coverage filters and bounded pagination.
-  Portfolio, comparison, sharing and appointment remain unfinished.
-- Current checks: Flutter analyzer passed; 36 Flutter tests passed; backend
-  typecheck/lint/build passed; 37 backend tests passed, 8 emulator tests skipped.
+  Portfolio, comparison and appointment remain unfinished. Minimal exact brief
+  disclosure preview/share and source-authorized enquiry list/detail are now
+  connected. Sharing creates one frozen enquiry/thread even across duplicate
+  intent keys, and queues an inbox notification intent without claiming delivery.
+- Current checks: Flutter analyzer passed; 38 Flutter tests passed; backend
+  typecheck/lint/build passed; 41 backend tests passed, 8 emulator tests skipped.
   Live-config Flutter release build passed. No production test records were added.
 - Live authenticated reload/settings/provider testing remains pending a private
   real-account sign-in. The missing approved live enrollment notice prevents new

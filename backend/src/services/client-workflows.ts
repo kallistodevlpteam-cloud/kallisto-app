@@ -14,6 +14,7 @@ import {
 import { ServiceError } from "./errors.js";
 import { ClientSettingsService } from './client-settings.js';
 import { ProviderDirectory } from './provider-directory.js';
+import { ClientSharing } from './client-sharing.js';
 import {
   canonical,
   confirmInput,
@@ -90,6 +91,7 @@ const noticeSchema = z.object({
 });
 
 export class ClientWorkflows {
+  get sharing() { return new ClientSharing(this.store, (tx,uid)=>this.access(tx,uid),this.providers); }
   get providers() { return new ProviderDirectory(this.store, (tx, uid) => this.access(tx, uid)); }
   get settings() { return new ClientSettingsService(this.store, (tx, uid) => this.access(tx, uid)); }
   constructor(private readonly store: RecordStore) {}

@@ -29,6 +29,14 @@ export function registerClientRoutes(
     meta: { correlation_id: request.id, schema_version: "kallisto.api.v1" },
   });
   const section = (request: FastifyRequest) => parse(z.strictObject({section:preferenceSection}), request.params).section;
+  app.get('/v1/enquiries', async request=>response(request,
+    await workflows.sharing.enquiries((await identity(request)).uid,request.query)));
+  app.get('/v1/enquiries/:enquiryId', async request=>response(request,
+    await workflows.sharing.enquiry((await identity(request)).uid,parse(z.strictObject({enquiryId:id}),request.params).enquiryId)));
+  app.post('/v1/projects/:projectId/share-preview', async request=>response(request,
+    await workflows.sharing.preview((await identity(request)).uid,projectId(request),request.body)));
+  app.post('/v1/projects/:projectId/share', async request=>response(request,
+    await workflows.sharing.share((await identity(request)).uid,projectId(request),request.body,key(request))));
   app.get('/v1/providers', async request => response(request,
     await workflows.providers.list((await identity(request)).uid, request.query)));
   app.get('/v1/providers/:providerId', async request => response(request,
