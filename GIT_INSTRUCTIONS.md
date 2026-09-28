@@ -24,7 +24,10 @@ git commit -m "Feature: describe the change"
 git push origin development
 ```
 
-Use the existing Git credential manager for GitHub authentication. Do not put
+Use the saved `GITHUB_TOKEN` in ignored `backend/.env` for GitHub authentication.
+The user explicitly authorized storage there and in the private credential
+Markdown; this is a local exception to inherited no-token-in-env guidance.
+Do not put
 tokens in the remote URL or tracked files. The initial import is committed as
 `Codex <codex@local>`; configure your own local Git identity before making your
 own commits if needed.
@@ -36,11 +39,11 @@ output, Git configuration, command-line arguments, and commits. Load tokens
 through trusted credential tooling or directly from a user-designated private
 file in memory when invoking the appropriate service.
 
-At setup, the local export explicitly reported **GitHub token unavailable**;
-noninteractive credential lookup also returned none, and the connected GitHub
-account reported `push: false` for this repository. A Vercel token is present in
-the ignored original export, but it cannot authorize GitHub operations. The
-initial local commit is ready; publication requires GitHub write access.
+The user subsequently supplied a GitHub token. `GITHUB_TOKEN` is now saved in
+ignored `backend/.env` and the credential Markdown in `backend/.private/`.
+Use that credential for GitHub instead of the connected account that previously
+reported read-only access. A Vercel token is present as `VERCEL_TOKEN` in the
+same private Markdown. Keep service credentials separate.
 
 Vercel is the required hosting provider. Use the token only with Vercel services
 when deploying this app. Legacy Vercel project links in the export belong to the

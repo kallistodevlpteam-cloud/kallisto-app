@@ -8,7 +8,7 @@ variable prefixes are not required by Firebase or Flutter.
 
 | File | Purpose |
 | --- | --- |
-| `backend/.private/kallisto-credentials-2026-09-28T19-55-16-992Z.md` | Exact ignored copy of the original export; retained as a private reference, never read by Flutter |
+| `backend/.private/kallisto-credentials-2026-09-28T19-55-16-992Z.md` | Ignored credential reference copied from the export, later updated with the user-supplied GitHub token; never read by Flutter |
 | `.env` | Public client settings, with `NEXT_PUBLIC_` removed |
 | `firebase-config.json` | Equivalent public configuration in JSON form for `--dart-define-from-file` |
 | `.env.example` | Commit-safe empty configuration template |
@@ -44,6 +44,10 @@ in `backend/`, as instructed by the user. See `../backend/AGENTS.md` and
 `../backend/README.md`. The existing sibling backend is preserved; no server
 implementation has been migrated yet. `OLLAMA_API_KEY` is stored only in
 `backend/.env`; no Ollama request integration is implemented.
+By explicit user instruction, `GITHUB_TOKEN` is also saved in `backend/.env`
+and the private credential Markdown for GitHub operations. `VERCEL_TOKEN`
+remains in that private Markdown for Vercel operations. These operator tokens
+must not be used as Flutter client settings or returned by backend APIs.
 
 ## Run and validate
 

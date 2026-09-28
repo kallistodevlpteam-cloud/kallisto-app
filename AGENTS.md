@@ -15,10 +15,18 @@ These instructions supplement the repository guidelines preserved in
   Prefer the user's existing authorized credentials or connected accounts;
   do not create replacement repositories, hosting projects, or tokens merely
   because an interactive login was cancelled. Verify actual write access.
-- The private credential export includes a Vercel token but explicitly records
-  the GitHub token as unavailable. Never treat one service's token as credentials
-  for another. If GitHub write credentials are absent, report the exact blocker
-  and retain local commits until access is provided.
+- User instruction: use `GITHUB_TOKEN` from ignored `backend/.env` for authorized
+  GitHub operations. The user explicitly requested storing it there and in the
+  private credential Markdown, overriding the earlier generic no-token-in-env
+  guidance for this local file only. Never copy its value into tracked files.
+- Use `VERCEL_TOKEN` from the ignored credential Markdown under
+  `backend/.private/` for authorized Vercel operations. Use each service's own
+  token; do not substitute tokens or repeatedly open login prompts when saved
+  credentials are available.
+- Load tokens privately into process memory for the relevant operation. Never
+  put token values in remote URLs, persisted Git configuration, command-line
+  arguments, logs, Flutter configuration, assets, or commits. Verify write access
+  and report actual authentication failures without displaying credentials.
 
 ## Frontend and backend locations
 

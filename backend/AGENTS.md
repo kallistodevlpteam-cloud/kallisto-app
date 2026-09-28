@@ -22,6 +22,11 @@ this directory, as explicitly instructed by the user.
 - Use exact approved CORS origins. CORS alone is not authorization.
 - Keep `.env.example` free of values copied from private credentials. Never commit
   `.env` or `.private/`, including the original credential export.
+- Per explicit user instruction, GitHub authentication uses `GITHUB_TOKEN` saved
+  in this folder's ignored `.env`; Vercel deployment uses `VERCEL_TOKEN` in the
+  private credential Markdown. These are operator credentials, not API runtime
+  configuration: never forward them to clients or load them into integrations
+  unrelated to GitHub/Vercel delivery. Follow the root `AGENTS.md` token rules.
 - Add relevant tests and real lint, typecheck, test, and build commands when the
   backend implementation is introduced. Do not claim an API exists merely because
   credentials or directories have been prepared.

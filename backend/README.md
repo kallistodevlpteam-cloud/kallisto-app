@@ -29,12 +29,16 @@ Read [AGENTS.md](AGENTS.md) before adding backend code.
 
 `.env` contains the existing backend settings, Firebase project/database
 selection, Turso connection credentials, local CORS settings, and
-`OLLAMA_API_KEY`. `GOOGLE_APPLICATION_CREDENTIALS` points to the service-account
+`OLLAMA_API_KEY`. It also contains `GITHUB_TOKEN` for operator Git operations,
+explicitly stored there at the user's request; the application must not expose
+or use this token as runtime business-service configuration.
+`GOOGLE_APPLICATION_CREDENTIALS` points to the service-account
 file in this folder's `.private/` directory. The local absolute path must be
 updated if the workspace moves; production should use its trusted credential
 mechanism and deployment environment.
 
-The original export is preserved byte-for-byte under `.private/`. Its legacy
+The credential Markdown under `.private/` was initially copied from the original
+export and subsequently updated with the user-supplied GitHub token. Its legacy
 paths and React/Vercel deployment notes are historical reference, not active
 configuration. Platform administration tokens remain in that ignored reference
 and are not loaded into application runtime settings.
