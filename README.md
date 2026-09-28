@@ -1,9 +1,18 @@
-# Kallisto · Flutter design system
+# Kallisto · Flutter client and backend
 
 Repository: [kallistodevlpteam-cloud/kallisto-app](https://github.com/kallistodevlpteam-cloud/kallisto-app).
 Use the `development` branch; see [GIT_INSTRUCTIONS.md](GIT_INSTRUCTIONS.md).
 
-An interactive Flutter showcase derived from the existing Kallisto web project. Eight collections, light/dark themes, responsive navigation, bundled images and typography, and a motion playground.
+The complete product brief is [MASTER_SPEC.md](docs/MASTER_SPEC.md). Its workspace
+amendment preserves this design system and requires client UI/backend delivery
+first, then service-provider workflows. Odin uses Gemma for chat/routine tools,
+Nemotron Ultra for heavy workflows, and Cartesia for speech input/output.
+
+The default entry is the adaptive client workspace. Firebase sign-in and the
+owner-project read API are implemented. Intake, messaging and live Odin/voice
+are still being connected; unavailable screens do not simulate success. See
+[delivery status](docs/CLIENT_DELIVERY.md) for implemented scope and validation.
+The original eight-collection design-system demo remains available separately.
 
 ## Run
 
@@ -11,16 +20,21 @@ From this folder in a new terminal:
 
 ```powershell
 flutter pub get
-flutter run -d chrome
+flutter run -d chrome --dart-define-from-file=.env --web-port=5000
 ```
 
 Or use the launcher, which finds the installed SDK even before your terminal picks up the new PATH:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\run-showcase.ps1
+powershell -ExecutionPolicy Bypass -File .\run-client.ps1
 ```
 
 SDK installed on this machine: `C:\Users\User\develop\flutter` (Flutter 3.47.5 / Dart 3.13.4). The official stable archive was SHA-256 verified. Its `bin` directory was added to the user PATH; restart existing terminals to pick it up. A normal user directory avoids packaged-app LocalAppData path virtualization.
+
+Run the original demo with `run-showcase.ps1` or
+`flutter run -t lib/main_showcase.dart -d chrome`. If Windows plugin symlink
+support is unavailable, use `dart pub get` and then the launcher with
+`-SkipPubGet` for web. Start the API separately with `npm run dev` in `backend/`.
 
 ## Collections
 
@@ -40,7 +54,9 @@ Use the moon/sun control to change theme. The preferences menu includes **Reduce
 ## Structure
 
 ```text
-lib/main.dart                    App and theme/motion preferences
+lib/main.dart                    Client app entry; preserved showcase class
+lib/main_showcase.dart           Separate design-system demo entry
+lib/client/                     Adaptive UI, session and backend gateway
 lib/design_system/tokens.dart    Shared tokens and Flutter themes
 lib/design_system/components.dart Panel, badge, grid, image, interactive card
 lib/showcase/showcase_shell.dart Responsive navigation
@@ -72,7 +88,13 @@ All backend APIs and server-side code for this Flutter app must be built in
 and `.private/` directory. Root environment files contain public client settings
 only. See [AGENTS.md](AGENTS.md) for this workspace's implementation boundary.
 
-Flutter was explicitly requested for this separate catalogue and its Firebase configuration. It makes no framework changes to the Next.js production app. Local ignored credentials and Flutter client configuration are now prepared; see [FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md). The catalogue still has no backend calls, business-record persistence, financial operations, or actual approval actions. This is not a full Flutter port of the production app.
+Flutter was explicitly requested for this separate application. It makes no
+framework changes to the older Next.js checkout. Local credentials remain
+ignored; see [FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md). The catalogue remains a
+demo; the new client uses a separate authenticated backend adapter. This is an
+initial implementation checkpoint, not the completed master specification or a
+production release. No domain writes, financial operations or approval actions
+have been enabled.
 
 The checkout has no `docs/DESIGN_SYSTEM.md`. Tokens and examples come from existing CSS/components; adaptations and the full inventory are in [DESIGN_SOURCES.md](docs/DESIGN_SOURCES.md). Images follow the parent repository's existing usage permissions. The bundled font includes its license.
 

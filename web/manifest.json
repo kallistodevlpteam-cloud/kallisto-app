@@ -1,11 +1,11 @@
 {
-    "name": "Kallisto Design System",
-    "short_name": "Kallisto Design",
+    "name": "Kallisto",
+    "short_name": "Kallisto",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F8F9FA",
     "theme_color": "#1175DE",
-    "description": "Interactive Kallisto Flutter components, layouts, and motion.",
+    "description": "Your Kallisto client workspace.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

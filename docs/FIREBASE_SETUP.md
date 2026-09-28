@@ -1,5 +1,12 @@
 # Flutter Firebase configuration
 
+Current implementation: the client now initializes Firebase Authentication and
+calls the protected backend for identity and owned projects. The original
+configuration-only checks below are historical. See [CLIENT_DELIVERY.md](CLIENT_DELIVERY.md)
+for current validation, remaining client flows and release limitations. Cartesia
+and Ollama keys are in the ignored backend configuration and private reference;
+neither is passed to Flutter. No database or security-rule migration is claimed.
+
 Prepared from the supplied credential export on 29 September 2026. The existing
 Firebase web registration can be used by Flutter web. Its React/Next.js environment
 variable prefixes are not required by Firebase or Flutter.

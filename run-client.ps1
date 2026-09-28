@@ -15,7 +15,7 @@ try {
     & $flutterExecutable pub get
     if ($LASTEXITCODE -ne 0) { throw 'Dependency resolution failed.' }
   }
-  $runArguments = @('run', '-t', 'lib/main_showcase.dart', '-d', $Device, '--no-pub')
+  $runArguments = @('run', '-d', $Device, '--no-pub')
   if (Test-Path -LiteralPath '.env') { $runArguments += '--dart-define-from-file=.env' }
   if ($Device -ne 'windows') { $runArguments += @('--web-hostname=localhost', '--web-port=5000') }
   & $flutterExecutable @runArguments

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'design_system/tokens.dart';
 import 'showcase/showcase_shell.dart';
+import 'client/client_app.dart';
 
-void main() => runApp(const KallistoShowcase());
+void main() => runApp(const KallistoClientApp());
 
 class KallistoShowcase extends StatefulWidget {
   const KallistoShowcase({super.key});

@@ -1,7 +1,37 @@
 # Kallisto Flutter workspace
 
-These instructions supplement the repository guidelines preserved in
-`docs/REPOSITORY_GUIDELINES.md`. Read that document before implementation.
+Read `docs/MASTER_SPEC.md` before implementation. It is the user's supplied
+complete product brief, adapted with the latest instructions in this chat.
+It controls product behavior over conflicting older guidance in
+`docs/REPOSITORY_GUIDELINES.md`; retain the older security and quality rules
+where compatible. Do not ask for another product brief.
+
+## Required build order and AI/voice architecture
+
+- Preserve and reuse the existing Flutter design system and demo. Design the
+  client-facing UI first for desktop web, phone and tablet, then connect its
+  backend and verify its workflows. Complete the client phase before SP work;
+  other actor work follows. Keep phase progress and limitations documented.
+- Build all trusted server code in `backend/`. The master spec authorizes
+  TypeScript/Fastify, Firebase Auth, Firestore business records, and Turso actual
+  media bytes. Do not substitute Firebase Storage for the required binary store.
+- Odin uses Ollama: Gemma (`gemma4:31b`) for chat and routine authorized tool
+  calls; NVIDIA Nemotron Ultra (`nemotron-3-ultra`) for heavy agent workflows.
+  Exact tags are verified engineering defaults, not a claim of live integration.
+- Initially expose only `tool_search`. It accepts purpose keywords and returns
+  permission-filtered matching function schemas. Activate only discovered tools
+  for that run; reauthorize execution and bound search/results/calls. The server
+  routes heavy work; neither model controls its own permissions or model choice.
+- Cartesia is the selected STT/TTS provider. User audio is transcribed, reviewed
+  or adopted into the same Odin conversation/intake, and sent to the chosen
+  model. Convert the final visible Gemma response to speech. Never speak hidden
+  reasoning or tool payloads. Keep text/manual modes usable if voice is unavailable.
+- Keep CARTESIA_API_KEY, OLLAMA_API_KEY and other secrets in ignored backend
+  configuration. Respect recording/processing consent and exact-version review;
+  spoken answers are not approval of contracts, spending, or project completion.
+- Transcription and speech synthesis do not imply translation between languages.
+  Preserve original speech/transcript; label any requested translation separately
+  and verify actual model/language support before enabling it.
 
 ## Version control
 

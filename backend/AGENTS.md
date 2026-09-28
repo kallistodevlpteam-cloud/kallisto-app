@@ -3,6 +3,12 @@
 All backend APIs and server-side code for this Flutter application belong in
 this directory, as explicitly instructed by the user.
 
+Use `../docs/MASTER_SPEC.md` as the product and contract authority, including its
+workspace amendment. Implement client workflows first, then SP. Use Gemma for
+routine chat/tools, Nemotron Ultra for heavy workflows, and permission-filtered
+`tool_search` as the only initial model tool. Cartesia supplies STT/TTS via trusted
+server adapters; no provider credentials may reach Flutter.
+
 - Use `src/api/` for API routing, `src/config/` for validated configuration,
   `src/services/` for domain operations, `src/repositories/` for persistence,
   `src/integrations/` for external service clients, and `tests/` for backend tests.
