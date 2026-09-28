@@ -19,6 +19,7 @@ class ConnectionPanel extends StatelessWidget {
     final title = switch (state) {
       ClientConnection.loading => 'Opening your workspace',
       ClientConnection.signedOut => 'Your workspace, kept private',
+      ClientConnection.enrollment => 'Finish setting up your account',
       ClientConnection.denied => 'Client access required',
       ClientConnection.offline => 'Let’s reconnect',
       _ => 'Unable to open your workspace',
@@ -27,6 +28,8 @@ class ConnectionPanel extends StatelessWidget {
         ? controller.message
         : state == ClientConnection.signedOut
         ? 'Sign in to see your projects, conversations and decisions.'
+        : state == ClientConnection.enrollment
+        ? 'Your sign-in is ready. Finish setting up your client workspace to start a project.'
         : 'Checking your account and project access.';
     return KPanel(
       child: Row(
@@ -58,11 +61,16 @@ class ConnectionPanel extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     children: [
-                      if (state == ClientConnection.signedOut)
+                      if (state == ClientConnection.signedOut ||
+                          state == ClientConnection.enrollment)
                         FilledButton(
                           onPressed: () =>
                               Navigator.pushNamed(context, '/client/account'),
-                          child: const Text('Sign in'),
+                          child: Text(
+                            state == ClientConnection.enrollment
+                                ? 'Finish account setup'
+                                : 'Sign in',
+                          ),
                         )
                       else
                         OutlinedButton.icon(

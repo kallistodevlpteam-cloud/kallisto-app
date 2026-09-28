@@ -21,7 +21,7 @@ const sample = ClientSnapshot(
   ],
 );
 
-class FakeGateway implements ClientGateway {
+class FakeGateway extends ClientGateway {
   ClientSnapshot? result;
   ClientFailure? failure;
   int signIns = 0;

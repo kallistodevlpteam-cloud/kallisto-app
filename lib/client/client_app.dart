@@ -6,6 +6,9 @@ import 'client_models.dart';
 import 'pages/account_page.dart';
 import 'pages/home_page.dart';
 import 'pages/projects_page.dart';
+import 'pages/intake_page.dart';
+import 'pages/brief_review_page.dart';
+import 'pages/project_overview_page.dart';
 import 'widgets/connection_panel.dart';
 
 class KallistoClientApp extends StatefulWidget {
@@ -63,40 +66,87 @@ class _ClientShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final index = path == '/'
+    final uri = Uri.parse(path);
+    final parts = uri.pathSegments;
+    final intake =
+        parts.length == 3 && parts[0] == 'client' && parts[1] == 'intakes';
+    final newProject = uri.path == '/client/projects/new';
+    final project =
+        parts.length == 3 &&
+        parts[0] == 'client' &&
+        parts[1] == 'projects' &&
+        !newProject;
+    final brief =
+        parts.length == 4 &&
+        parts[0] == 'client' &&
+        parts[1] == 'projects' &&
+        parts[3] == 'requirements';
+    final index = intake || newProject || brief || project
+        ? 1
+        : path == '/'
         ? 0
         : _destinations.indexWhere((item) => item.$3 == path);
     final selected = index < 0 ? 0 : index;
-    void navigate(int next) {
-      if (next != index) {
+    void navigate(int next) async {
+      if (path != _destinations[next].$3) {
+        if (controller.beforeLeaveEditor != null &&
+            !await controller.beforeLeaveEditor!()) {
+          return;
+        }
+        if (!context.mounted) return;
         Navigator.pushReplacementNamed(context, _destinations[next].$3);
       }
     }
 
-    final page = switch (index) {
-      0 => ClientHomePage(controller: controller),
-      1 => ClientProjectsPage(controller: controller),
-      2 => _PendingPage(
-        controller: controller,
-        title: 'Find your professional',
-        icon: Icons.people_outline,
-        description:
-            'Provider discovery is not available yet. Verified, published profiles will appear here once the directory is connected.',
-      ),
-      3 => _PendingPage(
-        controller: controller,
-        title: 'Your conversations',
-        icon: Icons.chat_bubble_outline,
-        description:
-            'Messaging is not available yet. Project conversations will appear here once secure messaging is connected.',
-      ),
-      4 => ClientAccountPage(controller: controller),
-      _ => const ClientEmptyState(
-        icon: Icons.search_off,
-        title: 'Page not found',
-        description: 'Choose a destination from the navigation to continue.',
-      ),
-    };
+    final Widget page;
+    if (intake || newProject || brief || project) {
+      page = controller.connection != ClientConnection.ready
+          ? ConnectionPanel(controller: controller)
+          : project
+          ? ProjectOverviewPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              projectId: parts[2],
+            )
+          : brief
+          ? BriefReviewPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              projectId: parts[2],
+              versionId: uri.queryParameters['version_id'],
+            )
+          : ClientIntakePage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              controller: controller,
+              intakeId: intake ? parts[2] : null,
+            );
+    } else {
+      page = switch (index) {
+        0 => ClientHomePage(controller: controller),
+        1 => ClientProjectsPage(controller: controller),
+        2 => _PendingPage(
+          controller: controller,
+          title: 'Find your professional',
+          icon: Icons.people_outline,
+          description:
+              'Provider discovery is not available yet. Verified, published profiles will appear here once the directory is connected.',
+        ),
+        3 => _PendingPage(
+          controller: controller,
+          title: 'Your conversations',
+          icon: Icons.chat_bubble_outline,
+          description:
+              'Messaging is not available yet. Project conversations will appear here once secure messaging is connected.',
+        ),
+        4 => ClientAccountPage(controller: controller),
+        _ => const ClientEmptyState(
+          icon: Icons.search_off,
+          title: 'Page not found',
+          description: 'Choose a destination from the navigation to continue.',
+        ),
+      };
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final phone = constraints.maxWidth < 600;

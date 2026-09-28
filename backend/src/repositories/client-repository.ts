@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Identity } from '../services/client-contracts.js';
 
 export const accessSchema = z.object({
   uid: z.string().min(1), role: z.enum(['client', 'provider', 'partner', 'internal']),
@@ -15,6 +16,7 @@ export const projectSchema = z.object({
 });
 export type Project = z.infer<typeof projectSchema>;
 export interface ClientRepository {
+  verifyIdentity(token: string): Promise<Identity>;
   verifyToken(token: string): Promise<string>;
   access(uid: string): Promise<Access | null>;
   displayName(uid: string): Promise<string>;

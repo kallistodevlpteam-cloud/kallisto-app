@@ -10,6 +10,7 @@ class ClientController extends ChangeNotifier {
   ClientSnapshot? snapshot;
   String message = '';
   bool busy = false;
+  Future<bool> Function()? beforeLeaveEditor;
   bool _disposed = false;
   int _generation = 0;
   StreamSubscription<void>? _subscription;
@@ -64,6 +65,8 @@ class ClientController extends ChangeNotifier {
             );
       connection = result == null
           ? ClientConnection.signedOut
+          : result.enrollmentRequired
+          ? ClientConnection.enrollment
           : ClientConnection.ready;
     } on ClientFailure catch (error) {
       if (_disposed || generation != _generation) return;
@@ -79,13 +82,21 @@ class ClientController extends ChangeNotifier {
     _notify();
   }
 
-  Future<void> signIn(String email, String password) async {
+  Future<void> signIn(
+    String email,
+    String password, {
+    bool register = false,
+  }) async {
     if (busy) return;
     busy = true;
     message = '';
     _notify();
     try {
-      await gateway.signIn(email, password);
+      if (register) {
+        await gateway.signUp(email, password);
+      } else {
+        await gateway.signIn(email, password);
+      }
       await refresh();
     } on ClientFailure catch (error) {
       message = error.message;

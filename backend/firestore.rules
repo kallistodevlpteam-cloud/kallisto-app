@@ -1,0 +1,8 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Client traffic uses the authenticated API. These rules are emulator-only
+    // until an explicit deployment reviews the existing project's permissions.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

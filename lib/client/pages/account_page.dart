@@ -3,6 +3,7 @@ import '../../design_system/components.dart';
 import '../client_controller.dart';
 import '../client_models.dart';
 import '../widgets/connection_panel.dart';
+import 'enrollment_panel.dart';
 
 class ClientAccountPage extends StatefulWidget {
   const ClientAccountPage({super.key, required this.controller});
@@ -17,6 +18,7 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
   final _password = TextEditingController();
   bool _obscure = true;
   bool _recovering = false;
+  bool _register = false;
   String _recoveryMessage = '';
   @override
   void dispose() {
@@ -68,7 +70,14 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 28),
-        if (controller.snapshot != null)
+        if (controller.connection == ClientConnection.loading)
+          const KPanel(child: LinearProgressIndicator())
+        else if (controller.connection == ClientConnection.enrollment)
+          EnrollmentPanel(
+            key: ValueKey(controller.snapshot?.uid),
+            controller: controller,
+          )
+        else if (controller.snapshot != null)
           KPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,12 +111,16 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sign in to Kallisto',
+                        _register
+                            ? 'Create your Kallisto account'
+                            : 'Sign in to Kallisto',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Use the email address registered to your account.',
+                      Text(
+                        _register
+                            ? 'Start with your email and a secure password.'
+                            : 'Use the email address registered to your account.',
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
@@ -145,8 +158,13 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
                                 setState(() => _obscure = !_obscure),
                           ),
                         ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Enter your password.'
+                        validator: (value) =>
+                            value == null ||
+                                value.isEmpty ||
+                                (_register && value.length < 8)
+                            ? (_register
+                                  ? 'Use at least 8 characters.'
+                                  : 'Enter your password.')
                             : null,
                       ),
                       if (controller.message.isNotEmpty) ...[
@@ -171,18 +189,35 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
                                     await controller.signIn(
                                       _email.text,
                                       password,
+                                      register: _register,
                                     );
                                   }
                                 },
                           child: Text(
-                            controller.busy ? 'Signing in…' : 'Sign in',
+                            controller.busy
+                                ? 'Please wait…'
+                                : (_register ? 'Create account' : 'Sign in'),
                           ),
                         ),
                       ),
                       TextButton(
-                        onPressed: _recovering ? null : _recover,
-                        child: const Text('Forgot your password?'),
+                        onPressed: controller.busy
+                            ? null
+                            : () => setState(() {
+                                _register = !_register;
+                                _recoveryMessage = '';
+                              }),
+                        child: Text(
+                          _register
+                              ? 'Already registered? Sign in'
+                              : 'New here? Create an account',
+                        ),
                       ),
+                      if (!_register)
+                        TextButton(
+                          onPressed: _recovering ? null : _recover,
+                          child: const Text('Forgot your password?'),
+                        ),
                       if (_recoveryMessage.isNotEmpty) Text(_recoveryMessage),
                     ],
                   ),

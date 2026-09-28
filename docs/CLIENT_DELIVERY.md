@@ -1,63 +1,65 @@
-# Client implementation checkpoint — 29 September 2026
+# Client delivery status — 29 September 2026
 
-This records executed work, not completion of the master specification.
+This records executed implementation and checks. **The full client phase in MASTER_SPEC is still unfinished.** SP work has not started.
 
-## Changes
+## Working now
 
-- Copied the Downloads brief to MASTER_SPEC.md; original unchanged. Updated
-  client-first sequence, Gemma chat/tools, NVIDIA Nemotron Ultra heavy workflows,
-  tool discovery and Cartesia transcription/adoption/speech. Updated both AGENTS.md files.
-- Added `lib/client/` shell, Home/Projects/Account pages, Firebase session and
-  typed gateway. Sidebar, rail and phone navigation reuse existing tokens.
-  Other destinations explicitly report unavailable behavior, not completed
-  workflows. Preserved `lib/main_showcase.dart`; added `run-client.ps1`.
-- Added Fastify server, validated config, Firebase Admin repository, authorized
-  identity/owner-project reads, model/speech adapters and closed tool discovery
-  in `backend/src/`. Added backend scripts, dependencies and tests.
-- Saved Cartesia credentials only in ignored server files. Updated the safe
-  template with API version, STT/TTS models and voice configuration.
+- Firebase email/password signup, sign-in, password recovery request, sign-out and session restoration. New identities reach client enrollment instead of receiving arbitrary roles. Enrollment requires the current configured notice and an explicit checkbox.
+- Adaptive Flutter Home, Account, Projects, private manual intake, exact brief review and project overview. The existing design system and showcase are preserved.
+- Manual input saves through trusted backend transactions with original inputs, field revisions, provenance and unknown/deferred/declined states. Empty values do not become zero or false. Entered INR amounts become integer paise.
+- Draft reload and resume, pause/resume commands, version checks, bounded reads and an unsaved-navigation guard. Project list refreshes after returning from creation.
+- Preparing a brief atomically binds one project and creates an immutable requirement version, source manifest and owner membership. Concurrent prepare requests return the same project/version. It does not confirm, share, select a provider or advance construction.
+- Explicit confirmation binds the displayed version and hash. Successor briefs preserve previous versions and decisions. Access is rechecked before idempotency replay.
+- Root `KALLISTO_MASTER_FLUTTER_ODIN_OLLAMA_KIMI_K3_AUDITED.md` now matches the amended `docs/MASTER_SPEC.md`: Gemma chat/routine tools, NVIDIA Nemotron heavy workflows, Cartesia STT/TTS. The Downloads original was not changed.
 
-## Verification
+## Executed verification
 
-| Command/check | Result |
+| Check | Result |
 | --- | --- |
-| Flutter analyze --no-pub | Passed; no issues |
-| Flutter test --no-pub | Passed; 30 tests including demo regression tests |
-| Flutter build web --release --no-pub --dart-define-from-file=.env | Passed |
-| Backend npm run typecheck | Passed |
-| Backend npm run lint | Passed |
-| Backend npm run test | Passed; 28 tests across four files |
-| Backend npm run build | Passed |
-| Backend npm audit --omit=dev | Zero vulnerabilities after targeted override |
-| Built backend local HTTP smoke | Health 200; anonymous projects 401 using real local configuration, without private database reads |
-| Cartesia authenticated voice catalogue | HTTP 200; selected public English stock voice |
-| Cartesia synthetic TTS -> STT | Valid 153,678-byte WAV; nonempty 48-character transcript; expected phrase matched |
-| Ollama Gemma and Nemotron synthetic requests | Both returned valid visible answers with expected models |
-| Gemma tool-search/discovered-tool synthetic sequence | Passed with a test-only read tool; no domain data or writes |
+| Flutter analyze --no-pub | Passed, no issues |
+| Flutter test --no-pub | 34 passed, including original showcase tests |
+| Backend typecheck, ESLint, build | Passed |
+| Backend tests with Firestore emulator | 37 passed |
+| Backend npm audit (full tree and production-only) | Zero vulnerabilities |
+| Flutter web debug emulator build | Passed |
+| Flutter web release build with public root configuration | Passed; output build/client-release |
+| Browser signup and client enrollment | Passed with synthetic account and nonbinding local-test notice |
+| Browser sign-in, session reload and saved draft reload | Passed using debug emulator build |
+| Browser prepare project and confirm exact brief | Passed; confirmed state persisted across page reload |
+| Browser pause/resume draft, unsaved-navigation guard, sign-out privacy | Passed |
+| Layouts | Desktop 1440x1000, tablet 768x1024, phone 390x844 inspected; widget coverage includes width 320 |
 
-Backend tests cover anonymous/wrong-role/missing-access rejection, revocation,
-owner-override rejection, provider transport validation, response limits, voice
-cancellation, tool permissions and configuration. Flutter tests cover responsive
-layouts, sign-in validation, session changes, private-data clearing, denied
-versus empty state and retry.
+The emulator suite checks conflicting enrollment roles, idempotency, atomic inconsistent-field rejection, cross-client access denial, simultaneous prepares, immutable confirmations, successor versions, pause/resume and revoked-access replay. Emulator data is isolated under `demo-kallisto`; no production domain records, rules, indexes or storage were migrated.
 
-Manual browser checks used the actual release bundle and signed-out state:
-1440x1000 desktop, 768x1024 tablet, 390x844 phone; Home/Projects/Account navigation,
-accessible names, form validation and keyboard focus. Browser logs showed no
-errors or warnings. Authenticated browser persistence and real Firebase project
-reads have not been verified with a provisioned client.
+Browser testing found that FlutterFire restores Auth emulator configuration before initialization only in debug mode. The local-test runner therefore deliberately builds debug web; the release artifact is compiled separately. An earlier synthetic draft lost two internal schema tags before the write-preservation fix; only that known emulator fixture was repaired. Subsequent full transaction tests exercise the corrected writes. Production data was untouched.
 
-## Remaining work and release boundaries
+Evidence: [phone brief](evidence/client-brief-phone.png), [tablet intake](evidence/client-intake-tablet.png), [desktop projects](evidence/client-projects-desktop.png). Screenshots show synthetic test content only. Browser logs include a Noto fallback-font coverage warning; no JavaScript errors were reported. Full locale/font coverage remains to be validated.
 
-The full client phase is unfinished: enrolment; manual intake/draft persistence;
-protected Turso upload; recording and transcript adoption; consent and atomic
-quotas; durable Odin jobs/context/confirmation; provider discovery/enquiries/
-selection; project details/documents/messages/reviews/finance/handover. Complete
-and verify client workflows before SP and other roles. No domain-write route is
-enabled.
+## Reproduce the local browser test
 
-Firebase emulator integration, authenticated end-to-end tests, distributed rate
-limiting, deployment configuration and native builds remain. Existing backend
-records/rules were not migrated. Native Firebase registrations/signing are not
-prepared. No Vercel deployment was made. Passing adapter smoke tests is not a
-production voice or agent rollout.
+Install backend dependencies with `npm ci` in `backend/`, and resolve Flutter packages. Java 21+ is required for the Firestore emulator. Run three PowerShell terminals from this workspace:
+
+```powershell
+.\run-local-test.ps1 -Part emulators
+.\run-local-test.ps1 -Part api
+.\run-local-test.ps1 -Part web
+```
+
+Open http://localhost:8080. Create a synthetic account, review the clearly marked local-test notice, enroll, start a brief, save it, prepare it and confirm the displayed version. The API runner seeds only the emulator notice. It does not load backend/.env or real credentials. To run integration checks while the emulators are running:
+
+```powershell
+.\run-local-test.ps1 -Part tests
+```
+
+Emulator records are temporary. Keep real personal/project data out of this test workspace. The local server binds loopback; no deployment is implied.
+
+## Remaining client implementation and release work
+
+- The manual UI covers core scalar/list fields, not all 77 Appendix E fields. Structured wishes, measurements, date precision, authorized references/attachments and other complex editors remain. Current intake listing is bounded to the first 20 drafts; full filter/pagination UI and representative access remain.
+- Organization enrollment UI, profile/preferences editing, email-verification UX, canonical C05 route binding and the complete action-descriptor DTO contract remain.
+- Protected Turso binary transfer, recording, transcript adoption/translation, durable Odin runs/jobs, consent and quota reservations remain. Provider adapters were previously smoke-tested, but live text/voice routes remain disabled. This is an implementation gap, not a claim of unavailable credentials.
+- Provider discovery, exact-version share previews/enquiries/offers/selection, messaging/notifications, document/review workflows, BOQ/variations, tasks/site/FTP progress, finance and handover/aftercare remain unimplemented. Their unavailable screens do not count as complete workflows.
+- Production enrollment needs an actual approved notice configured in `system_settings/features`. Lifecycle transitions need a valid approved published policy. No fabricated terms or approval were installed in production.
+- Distributed rate limits, full Firestore indexes/rules review and rollout, deployment configuration, native Firebase registrations/builds/signing and Vercel delivery remain. No Vercel deployment was made.
+
+The account/project-brief slice has local end-to-end evidence. It is not certification of a finished client product or production rollout.

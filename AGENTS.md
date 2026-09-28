@@ -79,3 +79,12 @@ where compatible. Do not ask for another product brief.
 All parent security, domain, validation, and delivery-branch requirements remain
 in force. This folder decision does not authorize database migrations, changing
 business rules, deploying services, or weakening access controls.
+
+## Client workflow implementation checkpoint
+
+Signup/enrollment, persisted manual intake, exact-version brief preparation and
+confirmation, project overview, and pause/resume are implemented in this slice.
+Read docs/CLIENT_DELIVERY.md for executed emulator/browser evidence and unfinished
+client features. Do not describe the client phase as complete or start SP work.
+Use run-local-test.ps1 for isolated demo-kallisto tests; production policies and
+records must never be replaced with emulator fixtures.

@@ -4,6 +4,7 @@ import type { ClientRepository } from '../src/repositories/client-repository.js'
 
 const actor = { uid: 'client-a', role: 'client' as const, organization_id: 'org-a', active: true, verified: false, access_revision: 1, client_id: 'client-record-a' };
 const repository = (): ClientRepository => ({
+  verifyIdentity:vi.fn(async()=>({uid:'client-a',emailVerified:false})),
   verifyToken: vi.fn(async () => 'client-a'), access: vi.fn(async () => ({ ...actor })),
   displayName: vi.fn(async () => 'Client'), projects: vi.fn(async () => ({ items: [], next_cursor: null })),
 });

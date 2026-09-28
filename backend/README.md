@@ -30,6 +30,16 @@ rejected. Never serve this directory as static content.
 | GET /v1/auth/me | Firebase token plus authoritative active client access |
 | GET /v1/projects | Owner-only project projection and bounded pagination |
 | GET /v1/odin/capabilities | Reports disabled live Odin execution truthfully |
+| GET /v1/capabilities | Actual enrollment notice availability and implemented modes |
+| POST /v1/provider-applications/client-enrollment | Explicit client-only enrollment with current notice |
+| GET, POST /v1/intakes | Owner-scoped listing and idempotent draft creation |
+| GET /v1/intakes/:id | Source-linked working fields and revision |
+| POST /v1/intakes/:id/inputs | Closed manual field operations and immutable input/revision |
+| POST /v1/intakes/:id/pause, /resume | Version-checked session transition |
+| POST /v1/intakes/:id/prepare-brief | Atomic project binding, immutable brief and source manifest |
+| GET /v1/projects/:id | Owner project overview |
+| GET /v1/projects/:id/requirements | Current or exact historical brief |
+| POST /v1/projects/:id/requirements/confirm | Explicit exact-hash/version confirmation |
 
 Reads use user_access/{uid}, users/{uid}, and projects with owner_uid equal to
 the authenticated uid. Access revision is rechecked before sending results.
@@ -38,9 +48,28 @@ Browser role/owner overrides are rejected. Firebase Admin stays server-side.
 Records must match MASTER_SPEC; this does not silently reinterpret the older
 React application's data model.
 
-The rate limiter is process-local. Distributed limiting, App Check, Firestore
-emulator tests, security-rule rollout, monitoring and deployment configuration
+The rate limiter is process-local. Distributed limiting, App Check,
+security-rule rollout, monitoring and deployment configuration
 remain release work. No database or rule migration has been applied.
+
+All mutations require an Idempotency-Key. Writes and idempotency records commit
+atomically; retries reauthorize the actor/resource. A draft revision binds at most
+one prepared manifest. New versions never overwrite prior confirmations. The
+initial manual SourceRef uses source_kind=manual, source_version=1 and
+locator=whole_input; the input retains the original closed operation list.
+Text, voice, file sources and partial source exclusions are not enabled yet.
+
+Enrollment reads the approved `system_settings/features` projection:
+`policy_version`, `approved_by_uid`, and
+`values.client_enrollment_notice.{version,text}`. This is the implemented policy
+adapter; deployment must configure actual approved notice content. Absent or
+stale policy blocks enrollment. The emulator runner supplies a nonbinding test
+notice only. No arbitrary role selection or live policy seed is available.
+
+Use `../run-local-test.ps1` for local Auth/Firestore emulators, the API, browser
+bundle and opt-in integration tests. `firebase.emulators.json` and its deny-all
+client rules are emulator configuration, not an authorized production rollout.
+See ../docs/CLIENT_DELIVERY.md for coverage and release limitations.
 
 ## AI and voice foundation
 

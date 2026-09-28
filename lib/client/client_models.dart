@@ -3,6 +3,7 @@ enum ClientSection { home, projects, providers, messages, account }
 enum ClientConnection {
   loading,
   signedOut,
+  enrollment,
   ready,
   denied,
   offline,
@@ -58,9 +59,11 @@ class ClientSnapshot {
     required this.name,
     required this.projects,
     required this.nextCursor,
+    this.enrollmentRequired = false,
   });
   final String uid;
   final String name;
   final List<ClientProject> projects;
   final String? nextCursor;
+  final bool enrollmentRequired;
 }

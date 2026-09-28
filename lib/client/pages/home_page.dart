@@ -125,7 +125,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                         child: Text(
                           _mode == 'Speak'
                               ? 'Voice is not available yet. You will be able to review the transcript before using it in your brief.'
-                              : 'Manual project intake is not available yet. Your existing project information remains in Projects.',
+                              : 'Start a private brief, add the details you know, and leave the rest open. You can save and return at any time.',
                         ),
                       ),
                     ],
@@ -139,19 +139,30 @@ class _ClientHomePageState extends State<ClientHomePage> {
                 children: [
                   FilledButton.icon(
                     onPressed: ready
-                        ? null
+                        ? _mode == 'Manual'
+                              ? () => Navigator.pushNamed(
+                                  context,
+                                  '/client/projects/new',
+                                )
+                              : null
                         : () => Navigator.pushNamed(context, '/client/account'),
                     icon: Icon(
                       ready ? Icons.arrow_upward : Icons.login,
                       size: 17,
                     ),
                     label: Text(
-                      ready ? 'Odin is unavailable' : 'Sign in to continue',
+                      ready
+                          ? _mode == 'Manual'
+                                ? 'Start my brief'
+                                : 'Odin is unavailable'
+                          : 'Sign in to continue',
                     ),
                   ),
                   Text(
                     ready
-                        ? 'Text stays here until sending is available.'
+                        ? _mode == 'Manual'
+                              ? 'Review before you confirm.'
+                              : 'Text stays here until sending is available.'
                         : 'Your message has not been sent.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
