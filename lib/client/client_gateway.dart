@@ -4,12 +4,15 @@ import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_environment.dart';
 import '../firebase_options.dart';
 import 'client_models.dart';
 import 'workflow_models.dart';
+import 'settings_models.dart';
+import 'provider_models.dart';
 
 String clientIntentId() => List.generate(
   16,
@@ -17,6 +20,18 @@ String clientIntentId() => List.generate(
 ).join();
 
 abstract class ClientGateway {
+  Future<ProviderPage> providers({
+    String? category,
+    String? coverage,
+    String? cursor,
+  }) => throw UnimplementedError();
+  Future<LeadProvider> provider(String id) => throw UnimplementedError();
+  Future<ClientSettings> settings(String section) => throw UnimplementedError();
+  Future<ClientSettings> saveSettings(
+    ClientSettings previous,
+    Map<String, dynamic> values,
+    String key,
+  ) => throw UnimplementedError();
   Stream<void> get sessionChanges;
   Future<void> initialize();
   Future<ClientSnapshot?> load({String? cursor});
@@ -49,24 +64,91 @@ abstract class ClientGateway {
 }
 
 class FirebaseClientGateway implements ClientGateway {
+  @override
+  Future<ProviderPage> providers({
+    String? category,
+    String? coverage,
+    String? cursor,
+  }) async => ProviderPage.fromJson(
+    await _get(
+      Uri(
+        path: '/v1/providers',
+        queryParameters: {
+          'category': ?category,
+          'coverage': ?coverage,
+          'cursor': ?cursor,
+        },
+      ).toString(),
+    ),
+  );
+  @override
+  Future<LeadProvider> provider(String id) async => LeadProvider.fromJson(
+    await _get('/v1/providers/${Uri.encodeComponent(id)}'),
+  );
+  @override
+  Future<ClientSettings> settings(String section) async =>
+      ClientSettings.fromJson(
+        await _get('/v1/workspace-settings/${Uri.encodeComponent(section)}'),
+      );
+  @override
+  Future<ClientSettings> saveSettings(
+    ClientSettings previous,
+    Map<String, dynamic> values,
+    String key,
+  ) async => ClientSettings.fromJson(
+    await _get(
+      '/v1/workspace-settings/${Uri.encodeComponent(previous.section)}',
+      method: 'POST',
+      commandKey: key,
+      payload: {'expected_version': previous.version, 'values': values},
+    ),
+  );
   FirebaseClientGateway() : _http = http.Client();
   final http.Client _http;
   final _changes = StreamController<void>.broadcast();
   FirebaseAuth? _auth;
   StreamSubscription<User?>? _subscription;
   bool _closed = false;
+  Future<void>? _initialization;
+  Future<String?>? _tokenRefresh;
+  String? _refreshUid;
+
+  Future<String?> _refreshToken(User user) async {
+    if (_tokenRefresh != null && _refreshUid == user.uid) return _tokenRefresh!;
+    _refreshUid = user.uid;
+    final future = user.getIdToken(true);
+    _tokenRefresh = future;
+    try {
+      return await future;
+    } finally {
+      if (identical(_tokenRefresh, future)) {
+        _tokenRefresh = null;
+        _refreshUid = null;
+      }
+    }
+  }
 
   @override
   Stream<void> get sessionChanges => _changes.stream;
 
   @override
-  Future<void> initialize() async {
+  Future<void> initialize() => _initialization ??= _initialize();
+
+  Future<void> _initialize() async {
     try {
       final options = DefaultFirebaseOptions.currentPlatform;
-      if (Firebase.apps.isEmpty) await Firebase.initializeApp(options: options);
+      const emulator = bool.fromEnvironment('KALLISTO_EMULATORS');
+      // Separate Auth persistence namespaces prevent an old emulator session
+      // from being restored into the real Firebase app on the same localhost.
+      final appName =
+          'kallisto-${options.projectId}-${emulator ? 'test' : 'live'}';
+      final matches = Firebase.apps.where((app) => app.name == appName);
+      final app = matches.isEmpty
+          ? await Firebase.initializeApp(name: appName, options: options)
+          : matches.single;
       if (_closed) return;
-      _auth = FirebaseAuth.instance;
-      if (const bool.fromEnvironment('KALLISTO_EMULATORS')) {
+      _auth = FirebaseAuth.instanceFor(app: app);
+      if (emulator) {
         if (!AppEnvironment.current.projectId.startsWith('demo-') ||
             !['localhost', '127.0.0.1'].contains(Uri.base.host)) {
           throw StateError('Emulators require a local demo project.');
@@ -75,10 +157,26 @@ class FirebaseClientGateway implements ClientGateway {
       } else if (AppEnvironment.current.projectId.startsWith('demo-')) {
         throw StateError('Demo project requires emulators.');
       }
-      _subscription = _auth!.authStateChanges().listen((_) {
-        if (!_closed) _changes.add(null);
-      });
+      if (kIsWeb) await _auth!.setPersistence(Persistence.LOCAL);
+      if (_closed) return;
+      final restored = Completer<void>();
+      _subscription = _auth!.authStateChanges().listen(
+        (_) {
+          if (!restored.isCompleted) {
+            restored.complete();
+          } else if (!_closed) {
+            _changes.add(null);
+          }
+        },
+        onError: (Object error, StackTrace stack) {
+          if (!restored.isCompleted) restored.completeError(error, stack);
+        },
+      );
+      await restored.future;
     } catch (_) {
+      await _subscription?.cancel();
+      _subscription = null;
+      _initialization = null;
       throw const ClientFailure(
         ClientConnection.unavailable,
         'Sign-in is unavailable on this device. Please try again later.',
@@ -94,6 +192,7 @@ class FirebaseClientGateway implements ClientGateway {
     String? commandKey,
     bool authenticated = true,
   }) async {
+    if (authenticated) await initialize();
     final user = _auth?.currentUser;
     if (authenticated && user == null) {
       throw const ClientFailure(ClientConnection.signedOut, 'Please sign in.');
@@ -119,11 +218,21 @@ class FirebaseClientGateway implements ClientGateway {
         'Content-Type': 'application/json',
         'Idempotency-Key': ?commandKey,
       };
-      final response =
-          await (method == 'POST'
+      Future<http.Response> send() =>
+          (method == 'POST'
                   ? _http.post(uri, headers: headers, body: jsonEncode(payload))
                   : _http.get(uri, headers: headers))
               .timeout(const Duration(seconds: 20));
+      var response = await send();
+      if (authenticated &&
+          response.statusCode == 401 &&
+          _auth?.currentUser?.uid == user!.uid) {
+        final freshToken = await _refreshToken(user);
+        if (freshToken != null && _auth?.currentUser?.uid == user.uid) {
+          headers['Authorization'] = 'Bearer $freshToken';
+          response = await send();
+        }
+      }
       if (authenticated && _auth?.currentUser?.uid != user?.uid) {
         throw const ClientFailure(
           ClientConnection.signedOut,
@@ -200,7 +309,7 @@ class FirebaseClientGateway implements ClientGateway {
 
   @override
   Future<ClientSnapshot?> load({String? cursor}) async {
-    if (_auth == null) await initialize();
+    await initialize();
     if (_auth?.currentUser == null) return null;
     final uid = _auth!.currentUser!.uid;
     final actor = await _get('/v1/auth/me');
@@ -251,7 +360,7 @@ class FirebaseClientGateway implements ClientGateway {
 
   @override
   Future<void> signIn(String email, String password) async {
-    if (_auth == null) await initialize();
+    await initialize();
     try {
       await _auth!.signInWithEmailAndPassword(
         email: email.trim(),
@@ -267,7 +376,7 @@ class FirebaseClientGateway implements ClientGateway {
 
   @override
   Future<void> recover(String email) async {
-    if (_auth == null) await initialize();
+    await initialize();
     try {
       await _auth!.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException {
@@ -279,11 +388,14 @@ class FirebaseClientGateway implements ClientGateway {
   }
 
   @override
-  Future<void> signOut() async => _auth?.signOut();
+  Future<void> signOut() async {
+    await initialize();
+    await _auth?.signOut();
+  }
 
   @override
   Future<void> signUp(String email, String password) async {
-    if (_auth == null) await initialize();
+    await initialize();
     try {
       await _auth!.createUserWithEmailAndPassword(
         email: email.trim(),

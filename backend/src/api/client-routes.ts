@@ -4,6 +4,7 @@ import type { ClientRepository } from "../repositories/client-repository.js";
 import { ClientWorkflows } from "../services/client-workflows.js";
 import { id, parse } from "../services/client-contracts.js";
 import { ServiceError } from "../services/errors.js";
+import { preferenceSection } from '../services/client-settings.js';
 
 export function registerClientRoutes(
   app: FastifyInstance,
@@ -27,6 +28,15 @@ export function registerClientRoutes(
     data,
     meta: { correlation_id: request.id, schema_version: "kallisto.api.v1" },
   });
+  const section = (request: FastifyRequest) => parse(z.strictObject({section:preferenceSection}), request.params).section;
+  app.get('/v1/providers', async request => response(request,
+    await workflows.providers.list((await identity(request)).uid, request.query)));
+  app.get('/v1/providers/:providerId', async request => response(request,
+    await workflows.providers.detail((await identity(request)).uid, parse(z.strictObject({providerId:id}),request.params).providerId)));
+  app.get('/v1/workspace-settings/:section', async request => response(request,
+    await workflows.settings.get((await identity(request)).uid, section(request))));
+  app.post('/v1/workspace-settings/:section', async request => response(request,
+    await workflows.settings.save((await identity(request)).uid, section(request), request.body, key(request))));
   app.get("/v1/capabilities", async (request) =>
     response(request, await workflows.capabilities()),
   );

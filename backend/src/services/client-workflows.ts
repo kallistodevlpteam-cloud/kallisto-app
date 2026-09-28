@@ -12,6 +12,8 @@ import {
   type Access,
 } from "../repositories/client-repository.js";
 import { ServiceError } from "./errors.js";
+import { ClientSettingsService } from './client-settings.js';
+import { ProviderDirectory } from './provider-directory.js';
 import {
   canonical,
   confirmInput,
@@ -88,6 +90,8 @@ const noticeSchema = z.object({
 });
 
 export class ClientWorkflows {
+  get providers() { return new ProviderDirectory(this.store, (tx, uid) => this.access(tx, uid)); }
+  get settings() { return new ClientSettingsService(this.store, (tx, uid) => this.access(tx, uid)); }
   constructor(private readonly store: RecordStore) {}
   private envelope(actor: string, row = 1): RecordData {
     return {

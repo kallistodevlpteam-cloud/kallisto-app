@@ -4,6 +4,7 @@ import '../client_controller.dart';
 import '../client_models.dart';
 import '../widgets/connection_panel.dart';
 import 'enrollment_panel.dart';
+import 'settings_page.dart';
 
 class ClientAccountPage extends StatefulWidget {
   const ClientAccountPage({super.key, required this.controller});
@@ -92,6 +93,17 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
                 ),
                 const SizedBox(height: 8),
                 const KBadge('Client workspace'),
+                const SizedBox(height: 24),
+                for (final section in clientSettingsSections.entries)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(section.value),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      '/client/settings/${section.key}',
+                    ),
+                  ),
                 const SizedBox(height: 24),
                 OutlinedButton(
                   onPressed: controller.signOut,

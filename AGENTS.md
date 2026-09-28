@@ -86,5 +86,8 @@ Signup/enrollment, persisted manual intake, exact-version brief preparation and
 confirmation, project overview, and pause/resume are implemented in this slice.
 Read docs/CLIENT_DELIVERY.md for executed emulator/browser evidence and unfinished
 client features. Do not describe the client phase as complete or start SP work.
-Use run-local-test.ps1 for isolated demo-kallisto tests; production policies and
-records must never be replaced with emulator fixtures.
+The latest user instruction requires real Firebase for the preview and workflow
+verification. Do not start emulators. `run-client.ps1` uses the public live
+configuration and stable localhost:8080 origin. Production policies and records
+must never be replaced with synthetic fixtures. Unit/widget test doubles are
+isolated tests, not the running application's data source.

@@ -4,6 +4,8 @@ import 'client_controller.dart';
 import 'client_gateway.dart';
 import 'client_models.dart';
 import 'pages/account_page.dart';
+import 'pages/settings_page.dart';
+import 'pages/providers_page.dart';
 import 'pages/home_page.dart';
 import 'pages/projects_page.dart';
 import 'pages/intake_page.dart';
@@ -68,6 +70,13 @@ class _ClientShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final uri = Uri.parse(path);
     final parts = uri.pathSegments;
+    final providerDetail =
+        parts.length == 3 && parts[0] == 'client' && parts[1] == 'providers';
+    final settingsPage =
+        parts.length == 3 &&
+        parts[0] == 'client' &&
+        parts[1] == 'settings' &&
+        clientSettingsSections.containsKey(parts[2]);
     final intake =
         parts.length == 3 && parts[0] == 'client' && parts[1] == 'intakes';
     final newProject = uri.path == '/client/projects/new';
@@ -81,7 +90,11 @@ class _ClientShell extends StatelessWidget {
         parts[0] == 'client' &&
         parts[1] == 'projects' &&
         parts[3] == 'requirements';
-    final index = intake || newProject || brief || project
+    final index = providerDetail
+        ? 2
+        : settingsPage
+        ? 4
+        : intake || newProject || brief || project
         ? 1
         : path == '/'
         ? 0
@@ -99,7 +112,23 @@ class _ClientShell extends StatelessWidget {
     }
 
     final Widget page;
-    if (intake || newProject || brief || project) {
+    if (providerDetail) {
+      page = controller.connection != ClientConnection.ready
+          ? ConnectionPanel(controller: controller)
+          : ClientProvidersPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              providerId: parts[2],
+            );
+    } else if (settingsPage) {
+      page = controller.connection != ClientConnection.ready
+          ? ConnectionPanel(controller: controller)
+          : ClientSettingsPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              section: parts[2],
+            );
+    } else if (intake || newProject || brief || project) {
       page = controller.connection != ClientConnection.ready
           ? ConnectionPanel(controller: controller)
           : project
@@ -125,13 +154,13 @@ class _ClientShell extends StatelessWidget {
       page = switch (index) {
         0 => ClientHomePage(controller: controller),
         1 => ClientProjectsPage(controller: controller),
-        2 => _PendingPage(
-          controller: controller,
-          title: 'Find your professional',
-          icon: Icons.people_outline,
-          description:
-              'Provider discovery is not available yet. Verified, published profiles will appear here once the directory is connected.',
-        ),
+        2 =>
+          controller.connection != ClientConnection.ready
+              ? ConnectionPanel(controller: controller)
+              : ClientProvidersPage(
+                  key: ValueKey(controller.snapshot?.uid),
+                  gateway: controller.gateway,
+                ),
         3 => _PendingPage(
           controller: controller,
           title: 'Your conversations',

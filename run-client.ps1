@@ -17,7 +17,8 @@ try {
   }
   $runArguments = @('run', '-d', $Device, '--no-pub')
   if (Test-Path -LiteralPath '.env') { $runArguments += '--dart-define-from-file=.env' }
-  if ($Device -ne 'windows') { $runArguments += @('--web-hostname=localhost', '--web-port=5000') }
+  $runArguments += '--dart-define=KALLISTO_EMULATORS=false'
+  if ($Device -ne 'windows') { $runArguments += @('--web-hostname=localhost', '--web-port=8080') }
   & $flutterExecutable @runArguments
   if ($LASTEXITCODE -ne 0) { throw 'Flutter could not launch. Check flutter doctor -v.' }
 } finally {

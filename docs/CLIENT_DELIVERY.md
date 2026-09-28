@@ -2,6 +2,34 @@
 
 This records executed implementation and checks. **The full client phase in MASTER_SPEC is still unfinished.** SP work has not started.
 
+## Latest live-Firebase checkpoint
+
+The complete master, including O/P/Q, has now been read. See
+[CLIENT_BUILD_STATUS.md](CLIENT_BUILD_STATUS.md) for each client screen and its
+remaining implementation. This section supersedes the older emulator workflow
+below for current use; do not run emulators for the user's preview.
+
+- Auth initialization now waits for the first restored Firebase session, uses
+  explicit web LOCAL persistence, and isolates live/test app namespaces. Auth
+  actions await the same initialization. One controlled token refresh retries an
+  expired-token API request with the original idempotency key.
+- `run-client.ps1` explicitly selects live Firebase at stable localhost:8080.
+  The real API runs at localhost:4000; Auth/Firestore emulators are stopped.
+- Added seven client preference editors backed by closed Firestore schemas,
+  version checks and replay protection. Language changes synchronize the canonical
+  language/region preference and user projection. Appearance/billing schemas are
+  implemented server-side but their full UI is not yet wired.
+- Added provider directory/profile reads with current eligibility and expiry
+  checks, safe field projection, category/coverage filters and bounded pagination.
+  Portfolio, comparison, sharing and appointment remain unfinished.
+- Current checks: Flutter analyzer passed; 36 Flutter tests passed; backend
+  typecheck/lint/build passed; 37 backend tests passed, 8 emulator tests skipped.
+  Live-config Flutter release build passed. No production test records were added.
+- Live authenticated reload/settings/provider testing remains pending a private
+  real-account sign-in. The missing approved live enrollment notice prevents new
+  client enrollment. Historical synthetic results below do not prove live login.
+
+
 ## Working now
 
 - Firebase email/password signup, sign-in, password recovery request, sign-out and session restoration. New identities reach client enrollment instead of receiving arbitrary roles. Enrollment requires the current configured notice and an explicit checkbox.

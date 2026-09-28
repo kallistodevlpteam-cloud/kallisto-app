@@ -130,6 +130,16 @@ Reference: [official Firebase Flutter setup](https://firebase.google.com/docs/fl
 
 ## Validation on 29 September 2026
 
+**Later client implementation:** the running preview now uses real Firebase
+`kallisto-db1`, the trusted local API and localhost:8080. Do not use emulators for
+the current user workflow. Client Auth uses the stable named app
+`kallisto-kallisto-db1-live`, LOCAL browser persistence and waits for the initial
+auth-state event before deciding signed-out status. An old emulator session
+cannot transfer to this live app. Sign in once with the real account, on the same
+hostname/port, to verify reload. Native registrations remain outstanding. See
+`CLIENT_DELIVERY.md` for later checks; the preparation-era results below are
+historical.
+
 - `flutter pub add firebase_core`: packages resolved, but command failed during
   Windows plugin symlink creation; Developer Mode remains a native setup blocker.
 - First web build failed because `flutter_web_plugins` was absent. Added that
