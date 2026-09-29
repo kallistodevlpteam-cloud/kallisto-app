@@ -59,4 +59,15 @@ describe('private client settings',()=>{
     expect(rows.get('users/alice')?.preferred_language).toBe('ml');
     await expect(service.save('alice','language_region',{expected_version:0,values:{language:'en',timezone:'Asia/Kolkata',date_format:'DD_MM_YYYY',unit_preference:'metric'}},'save-language-02')).rejects.toMatchObject({code:'STALE_VERSION'});
   });
+  it('updates own display name once and rejects auth/role injection',async()=>{
+    const {service,rows,revoke}=fixture();
+    const data={expected_version:1,display_name:'Alice updated'};
+    await service.saveProfile('alice',data,'profile-save-0001');await service.saveProfile('alice',data,'profile-save-0001');
+    expect(rows.get('users/alice')?.row_version).toBe(2);
+    expect((await service.profile('alice','alice@example.test',false)).profile.email_verified).toBe(false);
+    await expect(service.saveProfile('alice',{...data,role:'internal'},'profile-save-0002')).rejects.toBeDefined();
+    await expect(service.saveProfile('alice',data,'profile-save-0003')).rejects.toMatchObject({code:'STALE_VERSION'});
+    revoke();await expect(service.saveProfile('alice',data,'profile-save-0001')).rejects.toMatchObject({code:'FORBIDDEN'});
+  });
+
 });

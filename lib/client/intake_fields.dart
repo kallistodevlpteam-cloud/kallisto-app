@@ -1,4 +1,19 @@
-enum BriefFieldKind { text, paragraph, count, money, choice, list, boolean }
+enum BriefFieldKind {
+  text,
+  paragraph,
+  count,
+  money,
+  choice,
+  list,
+  boolean,
+  multiChoice,
+  measurement,
+  sitePin,
+  datePreference,
+  records,
+  serviceObservations,
+  attachments,
+}
 
 class BriefField {
   const BriefField(
@@ -14,6 +29,14 @@ class BriefField {
   final Map<String, String> options;
   final int limit;
 }
+
+const budgetComponents = {
+  'construction': 'Construction',
+  'interiors': 'Interiors',
+  'professional_fees': 'Professional fees',
+  'land': 'Land',
+  'other': 'Other',
+};
 
 const briefFields = [
   BriefField('brief.project.name', 'Project name', 'The idea', limit: 120),
@@ -351,6 +374,198 @@ const briefFields = [
     kind: BriefFieldKind.paragraph,
     limit: 8000,
   ),
+  BriefField(
+    'brief.scope.requested_services',
+    'Requested services',
+    'The idea',
+    kind: BriefFieldKind.multiChoice,
+    options: {
+      'architectural_design': 'Architectural design',
+      'interior_design': 'Interior design',
+      'construction_coordination': 'Construction coordination',
+      'construction_execution': 'Construction execution',
+      'renovation': 'Renovation',
+      'other': 'Other',
+    },
+  ),
+  BriefField(
+    'brief.building.target_built_up_area',
+    'Desired built-up area',
+    'Spaces',
+    kind: BriefFieldKind.measurement,
+  ),
+  BriefField(
+    'brief.site.plot_area',
+    'Plot area',
+    'Your site',
+    kind: BriefFieldKind.measurement,
+  ),
+  BriefField(
+    'brief.site.location.site_pin',
+    'Site coordinates you choose to share',
+    'Your site',
+    kind: BriefFieldKind.sitePin,
+  ),
+  BriefField(
+    'brief.budget.currency',
+    'Budget currency',
+    'Budget & timing',
+    kind: BriefFieldKind.choice,
+    options: {'INR': 'INR — Indian rupees'},
+  ),
+  BriefField(
+    'brief.budget.included_components',
+    'Budget includes',
+    'Budget & timing',
+    kind: BriefFieldKind.multiChoice,
+    options: budgetComponents,
+  ),
+  BriefField(
+    'brief.budget.excluded_components',
+    'Budget excludes',
+    'Budget & timing',
+    kind: BriefFieldKind.multiChoice,
+    options: budgetComponents,
+  ),
+  BriefField(
+    'brief.timing.start_preference',
+    'Preferred start',
+    'Budget & timing',
+    kind: BriefFieldKind.datePreference,
+  ),
+  BriefField(
+    'brief.timing.completion_preference',
+    'Preferred completion',
+    'Budget & timing',
+    kind: BriefFieldKind.datePreference,
+  ),
+  BriefField(
+    'brief.documents.reported_available_types',
+    'Documents you report having',
+    'Other details',
+    kind: BriefFieldKind.multiChoice,
+    options: {
+      'survey': 'Survey',
+      'drawing': 'Drawing',
+      'estimate': 'Estimate',
+      'reference': 'Reference',
+      'other': 'Other',
+    },
+  ),
+  BriefField(
+    'brief.existing_building.area',
+    'Existing building area',
+    'Other details',
+    kind: BriefFieldKind.measurement,
+  ),
+  BriefField(
+    'brief.existing_building.approximate_age_years',
+    'Approximate building age (years)',
+    'Other details',
+    limit: 7,
+  ),
+  BriefField(
+    'brief.interior.possession_preference',
+    'Expected possession',
+    'Other details',
+    kind: BriefFieldKind.datePreference,
+  ),
+  BriefField(
+    'brief.interior.access_constraints',
+    'Interior access restrictions',
+    'Other details',
+    kind: BriefFieldKind.list,
+  ),
+  BriefField(
+    'brief.commercial.operational_requirements',
+    'Commercial operating requirements',
+    'Other details',
+    kind: BriefFieldKind.list,
+  ),
+  BriefField(
+    'brief.communication.preferred_language',
+    'Preferred language',
+    'Communication',
+    kind: BriefFieldKind.choice,
+    options: {'en': 'English', 'ml': 'Malayalam'},
+  ),
+  BriefField(
+    'brief.communication.preferred_mode',
+    'Preferred way to provide details',
+    'Communication',
+    kind: BriefFieldKind.choice,
+    options: {
+      'text': 'Text',
+      'voice': 'Voice (when available)',
+      'manual': 'Manual',
+    },
+  ),
+  BriefField(
+    'brief.scope.existing_professional_refs',
+    'Professionals already involved',
+    'The idea',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.building.future_expansion',
+    'Future expansion wishes',
+    'Spaces',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.site.reported_conditions',
+    'Site conditions you report',
+    'Your site',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.site.reported_service_availability',
+    'Utilities you report available',
+    'Your site',
+    kind: BriefFieldKind.serviceObservations,
+  ),
+  BriefField(
+    'brief.spaces.additional_spaces',
+    'Additional spaces',
+    'Spaces',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.design.priorities',
+    'Your design priorities',
+    'People & style',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.design.reference_refs',
+    'Design reference links',
+    'People & style',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.documents.attachment_refs',
+    'Attached documents',
+    'Other details',
+    kind: BriefFieldKind.attachments,
+  ),
+  BriefField(
+    'brief.documents.reported_approval_status',
+    'Approvals you report',
+    'Other details',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.renovation.target_areas',
+    'Existing areas to renovate',
+    'Other details',
+    kind: BriefFieldKind.records,
+  ),
+  BriefField(
+    'brief.interior.reuse_items',
+    'Items you want to reuse',
+    'Other details',
+    kind: BriefFieldKind.records,
+  ),
 ];
 
 String briefLabel(String path) {
@@ -365,7 +580,17 @@ String briefLabel(String path) {
 
 String briefDisplay(String path, dynamic value) {
   if (value is bool) return value ? 'Yes' : 'No';
-  if (value is List) return value.join('; ');
+  if (value is List) return value.map((v) => briefDisplay(path, v)).join('; ');
+  if (value is Map) {
+    if (value.containsKey('unit')) {
+      return '${value['value']} ${value['unit'].toString().replaceAll('_', ' ')} (${value['precision'].toString().replaceAll('_', ' ')})';
+    }
+    if (value.containsKey('latitude')) {
+      return '${value['latitude']}, ${value['longitude']} (shared by you)';
+    }
+    if (value.containsKey('raw_phrase')) return value['raw_phrase'].toString();
+    return value.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+  }
   if (path.endsWith('_minor') && value is int) {
     return '₹${(value ~/ 100)}.${(value % 100).toString().padLeft(2, '0')}';
   }

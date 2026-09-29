@@ -4,6 +4,7 @@ import 'client_controller.dart';
 import 'client_gateway.dart';
 import 'client_models.dart';
 import 'pages/account_page.dart';
+import 'pages/odin_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/providers_page.dart';
 import 'pages/enquiries_page.dart';
@@ -40,17 +41,42 @@ class _KallistoClientAppState extends State<KallistoClientApp> {
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'Kallisto',
-    debugShowCheckedModeBanner: false,
-    theme: KTokens.theme(Brightness.light),
-    initialRoute: widget.initialRoute,
-    onGenerateRoute: (settings) => MaterialPageRoute<void>(
-      settings: settings,
-      builder: (_) => ListenableBuilder(
-        listenable: controller,
-        builder: (_, _) =>
-            _ClientShell(controller: controller, path: settings.name ?? '/'),
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: controller,
+    builder: (context, _) => MaterialApp(
+      title: 'Kallisto',
+      debugShowCheckedModeBanner: false,
+      theme: KTokens.theme(Brightness.light).copyWith(
+        visualDensity: controller.compact
+            ? VisualDensity.compact
+            : VisualDensity.standard,
+      ),
+      darkTheme: KTokens.theme(Brightness.dark).copyWith(
+        visualDensity: controller.compact
+            ? VisualDensity.compact
+            : VisualDensity.standard,
+      ),
+      themeMode: switch (controller.themePreference) {
+        'dark' => ThemeMode.dark,
+        'light' => ThemeMode.light,
+        _ => ThemeMode.system,
+      },
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          disableAnimations:
+              controller.reduceMotion ||
+              MediaQuery.disableAnimationsOf(context),
+        ),
+        child: child!,
+      ),
+      initialRoute: widget.initialRoute,
+      onGenerateRoute: (settings) => MaterialPageRoute<void>(
+        settings: settings,
+        builder: (_) => ListenableBuilder(
+          listenable: controller,
+          builder: (_, _) =>
+              _ClientShell(controller: controller, path: settings.name ?? '/'),
+        ),
       ),
     ),
   );
@@ -73,6 +99,11 @@ class _ClientShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final uri = Uri.parse(path);
     final parts = uri.pathSegments;
+    final settingsIndex = uri.path == '/client/settings';
+    final paymentMethods = uri.path == '/client/settings/payment-methods';
+    final odinRoute =
+        uri.path == '/odin' ||
+        (parts.length == 3 && parts[0] == 'odin' && parts[1] == 'runs');
     final messageRoute =
         parts.isNotEmpty && parts[0] == 'messages' && parts.length <= 2;
     final supportRoute =
@@ -134,7 +165,41 @@ class _ClientShell extends StatelessWidget {
     }
 
     final Widget page;
-    if (messageRoute || supportRoute) {
+    if (settingsIndex) {
+      page = ClientAccountPage(controller: controller);
+    } else if (paymentMethods) {
+      page = !signedIn
+          ? ConnectionPanel(controller: controller)
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Payment methods',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Online payment methods are not available. A payment processor has not been connected. Kallisto does not collect card numbers, CVV or bank credentials here.',
+                ),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/client/settings/billing'),
+                  child: const Text('Billing contact details'),
+                ),
+              ],
+            );
+    } else if (odinRoute) {
+      final initial = ModalRoute.of(context)?.settings.arguments;
+      page = !signedIn
+          ? ConnectionPanel(controller: controller)
+          : OdinPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              runId: parts.length == 3 ? parts[2] : null,
+              initialText: initial is String ? initial : '',
+              projectId: uri.queryParameters['project_id'],
+            );
+    } else if (messageRoute || supportRoute) {
       page = !signedIn
           ? ConnectionPanel(controller: controller)
           : messageRoute
@@ -171,6 +236,12 @@ class _ClientShell extends StatelessWidget {
               key: ValueKey('${controller.snapshot?.uid}:$path'),
               gateway: controller.gateway,
               section: parts[2],
+              onSaved: (settings) {
+                if (settings.section == 'appearance') {
+                  controller.applyAppearance(settings.values);
+                }
+                if (settings.section == 'profile') controller.refresh();
+              },
             );
     } else if (intake || newProject || brief || project) {
       page = controller.connection != ClientConnection.ready
@@ -230,8 +301,8 @@ class _ClientShell extends StatelessWidget {
               Container(
                 height: 64,
                 padding: EdgeInsets.symmetric(horizontal: phone ? 20 : 32),
-                decoration: const BoxDecoration(
-                  color: KTokens.surface,
+                decoration: BoxDecoration(
+                  color: KTokens.panel(context),
                   border: Border(bottom: BorderSide(color: KTokens.line)),
                 ),
                 child: Row(
@@ -250,7 +321,7 @@ class _ClientShell extends StatelessWidget {
                         'CLIENT WORKSPACE',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           letterSpacing: 1.4,
-                          color: KTokens.muted,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     const Spacer(),
@@ -292,8 +363,8 @@ class _ClientShell extends StatelessWidget {
                 if (!phone)
                   Container(
                     width: desktop ? KTokens.sidebar : 80,
-                    decoration: const BoxDecoration(
-                      color: KTokens.surface,
+                    decoration: BoxDecoration(
+                      color: KTokens.panel(context),
                       border: Border(right: BorderSide(color: KTokens.line)),
                     ),
                     child: Column(
@@ -352,7 +423,9 @@ class _ClientShell extends StatelessWidget {
                                             size: 22,
                                             color: i == selected
                                                 ? KTokens.accent
-                                                : KTokens.muted,
+                                                : Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
                                           ),
                                           if (desktop) ...[
                                             const SizedBox(width: 12),
@@ -364,7 +437,9 @@ class _ClientShell extends StatelessWidget {
                                                     : FontWeight.w500,
                                                 color: i == selected
                                                     ? KTokens.accent
-                                                    : KTokens.ink,
+                                                    : Theme.of(
+                                                        context,
+                                                      ).colorScheme.onSurface,
                                               ),
                                             ),
                                           ],

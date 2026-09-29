@@ -38,6 +38,18 @@ const defaults: Record<PreferenceSection, RecordData> = {
 
 export class ClientSettingsService {
   constructor(private store: RecordStore, private authorize: (tx: RecordTransaction, uid: string) => Promise<unknown>) {}
+  async profile(uid:string,email?:string,emailVerified=false){
+    return this.store.transaction(async tx=>{await this.authorize(tx,uid);const user=await tx.get(`users/${uid}`);if(!user)throw new ServiceError('NOT_FOUND',404);return {profile:{uid,display_name:user.display_name,email:email??null,email_verified:emailVerified,phone_e164:null,avatar_file_ref:null,preferred_language:user.preferred_language,preferred_timezone:user.preferred_timezone},row_version:user.row_version};});
+  }
+  async saveProfile(uid:string,input:unknown,key:string){
+    const data=parse(z.strictObject({expected_version:z.number().int().positive(),display_name:z.string().trim().min(1).max(120)}),input);parse(z.string().regex(/^[a-zA-Z0-9_-]{16,128}$/),key);const command=hash([uid,'PERSON_PROFILE_SAVE',key]);
+    await this.store.transaction(async tx=>{await this.authorize(tx,uid);const user=await tx.get(`users/${uid}`),prior=await tx.get(`idempotency_records/${command}`);if(!user)throw new ServiceError('NOT_FOUND',404);if(prior){if(prior.request_hash!==hash(data))throw new ServiceError('IDEMPOTENCY_CONFLICT',409);return;}if(user.row_version!==data.expected_version)throw new ServiceError('STALE_VERSION',409);
+      const metadata={schema_version:1,created_at:this.store.timestamp(),created_by_uid:uid};
+      tx.set(`users/${uid}`,{...user,display_name:data.display_name,row_version:data.expected_version+1,updated_at:this.store.timestamp(),updated_by_uid:uid});
+      tx.create(`audit_events/${command}`,{...metadata,audit_id:command,actor_uid:uid,operation:'PERSON_PROFILE_SAVE',resource_scope:{kind:'user',key:uid},outcome:'allowed'});
+      tx.create(`idempotency_records/${command}`,{...metadata,actor_uid:uid,request_hash:hash(data),operation:'PERSON_PROFILE_SAVE'});
+    });
+  }
   private async read(tx: RecordTransaction, uid: string, section: PreferenceSection) {
     const row = await tx.get(`user_preferences/${preferenceKey(uid, section)}`);
     if (row && (row.uid !== uid || row.section !== section)) throw new ServiceError('NOT_FOUND', 404);

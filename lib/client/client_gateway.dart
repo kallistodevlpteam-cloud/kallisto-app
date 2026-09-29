@@ -22,6 +22,29 @@ String clientIntentId() => List.generate(
 ).join();
 
 abstract class ClientGateway {
+  Future<ClientSettings> profile() => throw UnimplementedError();
+  Future<ClientSettings> saveProfile(
+    ClientSettings previous,
+    String name,
+    String key,
+  ) => throw UnimplementedError();
+  Future<Map<String, dynamic>> odinCapabilities() => throw UnimplementedError();
+  Future<List<dynamic>> odinRuns() => throw UnimplementedError();
+  Future<Map<String, dynamic>> odinRun(String id) => throw UnimplementedError();
+  Future<void> withdrawOdinConsent(String version, String key) =>
+      throw UnimplementedError();
+  Future<String> odinConsent(String version, String key) =>
+      throw UnimplementedError();
+  Future<Map<String, dynamic>> odinSend(
+    String text,
+    String key,
+    String consent, {
+    String? conversation,
+    String? project,
+    bool planning = false,
+  }) => throw UnimplementedError();
+  Future<void> odinAction(String id, String action, int version, String key) =>
+      throw UnimplementedError();
   Future<ClientPage<ClientThread>> conversations({String? cursor}) =>
       throw UnimplementedError();
   Future<ClientThread> conversation(String id) => throw UnimplementedError();
@@ -91,6 +114,115 @@ abstract class ClientGateway {
 }
 
 class FirebaseClientGateway implements ClientGateway {
+  ClientSettings _profileSettings(Object? value) {
+    final data = objectValue(value);
+    return ClientSettings(
+      'profile',
+      integerValue(data, 'row_version'),
+      objectValue(data['profile']),
+    );
+  }
+
+  @override
+  Future<ClientSettings> profile() async =>
+      _profileSettings(await _get('/v1/me/profile'));
+  @override
+  Future<ClientSettings> saveProfile(
+    ClientSettings previous,
+    String name,
+    String key,
+  ) async => _profileSettings(
+    await _get(
+      '/v1/me/profile',
+      method: 'POST',
+      commandKey: key,
+      payload: {'expected_version': previous.version, 'display_name': name},
+    ),
+  );
+  @override
+  Future<void> withdrawOdinConsent(String version, String key) async {
+    await _get(
+      '/v1/me/consents',
+      method: 'POST',
+      commandKey: key,
+      payload: {
+        'purpose': 'external_ai_processing',
+        'resource_scope': {'kind': 'account'},
+        'policy_version': version,
+        'decision': 'withdrawn',
+        'explicit_confirmation': true,
+      },
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> odinCapabilities() async =>
+      objectValue(await _get('/v1/odin/capabilities'));
+  @override
+  Future<List<dynamic>> odinRuns() async =>
+      objectValue(await _get('/v1/odin/runs'))['items'] as List;
+  @override
+  Future<Map<String, dynamic>> odinRun(String id) async =>
+      objectValue(await _get('/v1/odin/runs/${Uri.encodeComponent(id)}'));
+  @override
+  Future<String> odinConsent(String version, String key) async =>
+      objectValue(
+            await _get(
+              '/v1/me/consents',
+              method: 'POST',
+              commandKey: key,
+              payload: {
+                'purpose': 'external_ai_processing',
+                'resource_scope': {'kind': 'account'},
+                'policy_version': version,
+                'decision': 'granted',
+                'explicit_confirmation': true,
+              },
+            ),
+          )['consent_id']
+          as String;
+  @override
+  Future<Map<String, dynamic>> odinSend(
+    String text,
+    String key,
+    String consent, {
+    String? conversation,
+    String? project,
+    bool planning = false,
+  }) async => objectValue(
+    await _get(
+      '/v1/odin/runs',
+      method: 'POST',
+      commandKey: key,
+      payload: {
+        'mode': 'assist',
+        'requested_output_kind': planning ? 'project_plan' : 'answer',
+        'consent_record_id': consent,
+        'conversation_id': ?conversation,
+        'project_id': ?project,
+        'message': {
+          'client_message_id': key,
+          'text': text,
+          'attachment_refs': <Object>[],
+        },
+      },
+    ),
+  );
+  @override
+  Future<void> odinAction(
+    String id,
+    String action,
+    int version,
+    String key,
+  ) async {
+    await _get(
+      '/v1/odin/runs/${Uri.encodeComponent(id)}/$action',
+      method: 'POST',
+      commandKey: key,
+      payload: {'expected_version': version},
+    );
+  }
+
   @override
   Future<ClientPage<ClientThread>> conversations({String? cursor}) async =>
       ClientPage.parse(
@@ -378,6 +510,32 @@ class FirebaseClientGateway implements ClientGateway {
           ClientConnection.signedOut,
           'Session changed.',
         );
+      }
+      if (response.statusCode >= 400 && path.startsWith('/v1/odin')) {
+        String? code;
+        try {
+          code =
+              (jsonDecode(response.body)
+                      as Map<String, dynamic>)['error']?['code']
+                  as String?;
+        } catch (_) {}
+        final message = <String, String>{
+          'ODIN_QUOTA_EXHAUSTED':
+              'The daily Odin development allowance is used. Saved answers remain available; try again after the UTC day resets.',
+          'ODIN_ACTIVE_LIMIT':
+              'Two Odin runs are already active. Wait for one or stop it before starting another.',
+          'ODIN_CONVERSATION_BUSY':
+              'This conversation already has a run in progress. Open it from saved runs.',
+          'ODIN_SOURCE_CHANGED':
+              'The project changed since this run. Its previous response is withheld; start a new conversation with the current project.',
+          'AI_CONSENT_REQUIRED':
+              'Review and grant the current AI processing notice before starting a new run.',
+          'ODIN_RETRY_UNAVAILABLE':
+              'This run cannot be retried further. Its original input is saved; start a new run if needed.',
+        }[code];
+        if (message != null) {
+          throw ClientFailure(ClientConnection.ready, message);
+        }
       }
       if (response.statusCode == 401) {
         if (path != '/v1/auth/me' && path != '/v1/projects' && !_closed) {

@@ -48,3 +48,11 @@ it('reports truthful AI readiness and does not expose provider keys', async () =
   expect(result.json().data).toMatchObject({ enabled: false, speech_provider: 'cartesia', tool_discovery: 'tool_search' });
   expect(result.body).not.toMatch(/api_key|test-id-token/i);
 });
+it('mounts the real Odin routes without conflicting with unavailable fallback', async () => {
+  const {OdinService}=await import('../src/services/odin.js');
+  const store={get:async()=>({...actor}),list:async()=>[],timestamp:()=>null,transaction:async()=>{throw Error('Not used');}};
+  const odin=new OdinService(store,{complete:async()=>({role:'assistant',content:'test'})},{enabled:true,dailyCalls:16,production:false});
+  const app=await createApp(repository(),['http://localhost:5000'],undefined,odin);apps.push(app);
+  expect((await app.inject({url:'/v1/odin/capabilities',headers})).json().data.available).toBe(true);
+  expect((await app.inject('/v1/odin/runs')).statusCode).toBe(401);
+});

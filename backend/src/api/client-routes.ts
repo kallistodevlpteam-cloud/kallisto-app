@@ -28,6 +28,8 @@ export function registerClientRoutes(
     data,
     meta: { correlation_id: request.id, schema_version: "kallisto.api.v1" },
   });
+  app.get('/v1/me/profile',async request=>{const actor=await identity(request);return response(request,await workflows.settings.profile(actor.uid,actor.email,actor.emailVerified));});
+  app.post('/v1/me/profile',async request=>{const actor=await identity(request);await workflows.settings.saveProfile(actor.uid,request.body,key(request));return response(request,await workflows.settings.profile(actor.uid,actor.email,actor.emailVerified));});
   const section = (request: FastifyRequest) => parse(z.strictObject({section:preferenceSection}), request.params).section;
   const conversationId=(request:FastifyRequest)=>parse(z.strictObject({conversationId:id}),request.params).conversationId;
   app.get('/v1/conversations',async request=>response(request,await workflows.communications.conversations((await identity(request)).uid,request.query)));

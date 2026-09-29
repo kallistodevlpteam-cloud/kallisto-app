@@ -1,3 +1,17 @@
+# Latest live development checkpoint — 29 September 2026
+
+This section supersedes the historical emulator checkpoint below. Current preview uses real Firebase, not emulators.
+
+Odin now has real Gemma chat, discovered read tools, server-routed Nemotron planning, explicit processing consent, durable Firestore jobs, bounded quota reservations, cancellation, retry and saved runs. Browser QA submitted synthetic prompts, exercised tool_search and projects_list, obtained a Nemotron plan, and restored a saved Gemma answer after reload. Evidence: [Gemma tools](evidence/live-odin-gemma-tools.png), [Nemotron planning](evidence/live-odin-nemotron-plan.png).
+
+The manual brief now represents every one of Appendix E's 77 fields with typed controls and stable structured entry IDs. Protected attachment upload remains visibly unavailable; this is not a claim that file/voice integration is finished. Profile-name editing, billing contact preferences and applied appearance settings are connected. The QA appearance preference survived a full reload, and a structured future-expansion entry saved and reloaded from real Firebase.
+
+Validation: backend typecheck, lint, build and 64 unit tests passed; eight emulator tests were intentionally skipped. Flutter analyzer, 45 unit/widget tests and release web build are checked for this checkpoint. Real provider/browser checks are separate from test doubles.
+
+Remaining work is tracked screen-by-screen in [IMPLEMENTATION_TODO.md](IMPLEMENTATION_TODO.md). Client modules, Odin intake adoption, protected media/voice and the SP phase are not complete. The existing Turso schema lacks the canonical upload-state and per-chunk-integrity fields; only a read-only schema inspection was performed. No migration, production processing policy, Vercel deployment or native app release is claimed.
+
+---
+
 # Client delivery status — 29 September 2026
 
 This records executed implementation and checks. **The full client phase in MASTER_SPEC is still unfinished.** SP work has not started.

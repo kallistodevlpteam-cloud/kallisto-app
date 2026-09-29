@@ -8,6 +8,15 @@ class ClientController extends ChangeNotifier {
   final ClientGateway gateway;
   ClientConnection connection = ClientConnection.loading;
   ClientSnapshot? snapshot;
+  String themePreference = 'system';
+  bool compact = false, reduceMotion = false;
+  void applyAppearance(Map<String, dynamic> values) {
+    themePreference = values['theme'] as String? ?? 'system';
+    compact = values['density'] == 'compact';
+    reduceMotion = values['reduce_motion'] == true;
+    _notify();
+  }
+
   String message = '';
   bool busy = false;
   Future<bool> Function()? beforeLeaveEditor;
@@ -41,7 +50,12 @@ class ClientController extends ChangeNotifier {
   Future<void> refresh({bool next = false}) async {
     final generation = ++_generation;
     final previous = next ? snapshot : null;
-    if (!next) snapshot = null;
+    if (!next) {
+      snapshot = null;
+      themePreference = 'system';
+      compact = false;
+      reduceMotion = false;
+    }
     connection = ClientConnection.loading;
     message = '';
     _notify();
@@ -68,6 +82,16 @@ class ClientController extends ChangeNotifier {
           : result.enrollmentRequired
           ? ClientConnection.enrollment
           : ClientConnection.ready;
+      if (connection == ClientConnection.ready) {
+        try {
+          final appearance = await gateway.settings('appearance');
+          if (!_disposed && generation == _generation) {
+            applyAppearance(appearance.values);
+          }
+        } catch (_) {
+          /* Appearance availability does not block sign-in. */
+        }
+      }
     } on ClientFailure catch (error) {
       if (_disposed || generation != _generation) return;
       snapshot = null;
@@ -113,6 +137,9 @@ class ClientController extends ChangeNotifier {
   Future<void> signOut() async {
     ++_generation;
     snapshot = null;
+    themePreference = 'system';
+    compact = false;
+    reduceMotion = false;
     connection = ClientConnection.signedOut;
     _notify();
     try {

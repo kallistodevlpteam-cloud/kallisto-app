@@ -11,12 +11,12 @@ import {
   projectSchema,
   type ClientRepository,
 } from "./client-repository.js";
-import { firestoreRecordStore } from "./record-store.js";
+import { firestoreRecordStore, type RecordStore } from "./record-store.js";
 import { ClientWorkflows } from "../services/client-workflows.js";
 
 export function firebaseClientRepository(
   config: Environment,
-): ClientRepository & { workflows: ClientWorkflows } {
+): ClientRepository & { workflows: ClientWorkflows; store: RecordStore } {
   const credentials =
     config.KALLISTO_EMULATORS === "true"
       ? null
@@ -57,6 +57,7 @@ export function firebaseClientRepository(
   const auth = getAuth(app);
   const db = getFirestore(app, config.FIRESTORE_DATABASE_ID);
   return {
+    store: firestoreRecordStore(db),
     workflows: new ClientWorkflows(firestoreRecordStore(db)),
     async verifyIdentity(token) {
       try {

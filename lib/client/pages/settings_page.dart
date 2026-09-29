@@ -6,6 +6,9 @@ import '../client_models.dart';
 import '../settings_models.dart';
 
 const clientSettingsSections = <String, String>{
+  'profile': 'Your profile',
+  'appearance': 'Appearance',
+  'billing': 'Billing details',
   'communication': 'Communication',
   'language_region': 'Language & region',
   'notifications': 'Notifications',
@@ -20,9 +23,11 @@ class ClientSettingsPage extends StatefulWidget {
     super.key,
     required this.gateway,
     required this.section,
+    this.onSaved,
   });
   final ClientGateway gateway;
   final String section;
+  final void Function(ClientSettings)? onSaved;
   @override
   State<ClientSettingsPage> createState() => _ClientSettingsPageState();
 }
@@ -46,7 +51,9 @@ class _ClientSettingsPageState extends State<ClientSettingsPage> {
       _message = '';
     });
     try {
-      final result = await widget.gateway.settings(widget.section);
+      final result = widget.section == 'profile'
+          ? await widget.gateway.profile()
+          : await widget.gateway.settings(widget.section);
       if (mounted) {
         setState(() {
           _saved = result;
@@ -76,7 +83,14 @@ class _ClientSettingsPageState extends State<ClientSettingsPage> {
       _message = '';
     });
     try {
-      final result = await widget.gateway.saveSettings(_saved!, _values, _key!);
+      final result = widget.section == 'profile'
+          ? await widget.gateway.saveProfile(
+              _saved!,
+              _values['display_name'] as String,
+              _key!,
+            )
+          : await widget.gateway.saveSettings(_saved!, _values, _key!);
+      widget.onSaved?.call(result);
       if (mounted) {
         setState(() {
           _saved = result;
@@ -123,6 +137,89 @@ class _ClientSettingsPageState extends State<ClientSettingsPage> {
     onChanged: _busy ? null : (value) => setState(() => _values[field] = value),
   );
   List<Widget> _fields() => switch (widget.section) {
+    'profile' => [
+      TextFormField(
+        initialValue: _values['display_name'] as String?,
+        enabled: !_busy,
+        maxLength: 120,
+        decoration: const InputDecoration(labelText: 'Display name'),
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Enter your name.' : null,
+        onSaved: (v) => _values['display_name'] = v!.trim(),
+      ),
+      Text('Email: ${_values['email'] ?? 'Not supplied'}'),
+      Text(
+        _values['email_verified'] == true
+            ? 'Email verified by Firebase'
+            : 'Email verification not confirmed',
+      ),
+      const Text('Avatar uploads and contact changes are not connected yet.'),
+      TextButton(
+        onPressed: () =>
+            Navigator.pushNamed(context, '/client/settings/language_region'),
+        child: const Text('Language & region'),
+      ),
+    ],
+    'appearance' => [
+      _choice('theme', 'Theme', ['light', 'dark', 'system']),
+      _choice('density', 'Density', ['comfortable', 'compact']),
+      _toggle('reduce_motion', 'Reduce motion'),
+      const Text(
+        'Changes apply after you save. Device text scaling remains in effect.',
+      ),
+    ],
+    'billing' => [
+      const Text(
+        'Your billing contact preferences. This does not create an invoice or payment.',
+      ),
+      for (final field in ['name', 'email', 'phone_e164', 'address'])
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: TextFormField(
+            initialValue:
+                (_values['billing_contact'] as Map?)?[field] as String?,
+            enabled: !_busy,
+            decoration: InputDecoration(
+              labelText: {
+                'name': 'Billing name',
+                'email': 'Billing email',
+                'phone_e164': 'Phone (+country code)',
+                'address': 'Billing address',
+              }[field],
+            ),
+            maxLength: field == 'address'
+                ? 2000
+                : field == 'email'
+                ? 254
+                : 120,
+            onSaved: (v) {
+              final contact = Map<String, dynamic>.from(
+                _values['billing_contact'] as Map? ?? {},
+              );
+              if (v == null || v.trim().isEmpty) {
+                contact.remove(field);
+              } else {
+                contact[field] = v.trim();
+              }
+              _values['billing_contact'] = contact;
+            },
+          ),
+        ),
+      TextFormField(
+        initialValue: _values['invoice_delivery_email'] as String?,
+        enabled: !_busy,
+        decoration: const InputDecoration(
+          labelText: 'Invoice delivery email (optional)',
+        ),
+        onSaved: (v) {
+          if (v == null || v.trim().isEmpty) {
+            _values.remove('invoice_delivery_email');
+          } else {
+            _values['invoice_delivery_email'] = v.trim();
+          }
+        },
+      ),
+    ],
     'communication' => [
       const Text(
         'Language is managed in Language & region. Channel preferences do not guarantee email or push delivery.',
@@ -204,7 +301,7 @@ class _ClientSettingsPageState extends State<ClientSettingsPage> {
       _choice('preferred_language', 'Preferred language', ['en', 'ml']),
       _toggle('spoken_replies_enabled', 'Speak final responses'),
       const Text(
-        'Voice and AI remain unavailable until their processing, usage and provider setup is ready. Manual intake remains available.',
+        'Odin text chat and planning are available from Home with processing permission. Voice preferences take effect when voice is connected; manual intake remains available.',
       ),
     ],
     _ => [],

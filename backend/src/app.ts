@@ -1,3 +1,5 @@
+import {registerOdinRoutes} from './api/odin-routes.js';
+import type {OdinService} from './services/odin.js';
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
@@ -22,8 +24,10 @@ export async function createApp(
   repository: ClientRepository,
   origins: string[],
   workflows?: ClientWorkflows,
+  odin?: OdinService,
 ) {
   const app = Fastify({ logger: false, bodyLimit: 128 * 1024 });
+  if(odin)registerOdinRoutes(app,repository,odin);
   await app.register(cors, {
     origin: origins,
     credentials: false,
@@ -125,7 +129,7 @@ export async function createApp(
       throw new ServiceError("ACCESS_CHANGED", 403);
     return { data: page };
   });
-  app.get("/v1/odin/capabilities", async (request) => {
+  if(!odin) app.get("/v1/odin/capabilities", async (request) => {
     await client(request.headers.authorization);
     return {
       data: {
@@ -139,6 +143,6 @@ export async function createApp(
       },
     };
   });
-  // No live model/write endpoints until durable jobs, consent and quotas exist.
+  // Runtime integration is optional in isolated API tests.
   return app;
 }

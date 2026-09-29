@@ -141,8 +141,20 @@ class _ProjectOverviewPageState extends State<ProjectOverviewPage> {
                     const SizedBox(height: 8),
                     Text(
                       project.currentVersion == project.confirmedVersion
-                          ? 'Keep your brief up to date while provider sharing is being connected.'
+                          ? 'Explore eligible providers and review exactly what you share from your confirmed brief.'
                           : 'Check your requirements and leave any undecided details open.',
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        '/odin?project_id=${Uri.encodeQueryComponent(widget.projectId)}',
+                      ),
+                      child: const Text('Ask Odin about this project'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/client/providers'),
+                      child: const Text('Explore providers'),
                     ),
                     if (project.policyUnavailable) ...[
                       const SizedBox(height: 16),

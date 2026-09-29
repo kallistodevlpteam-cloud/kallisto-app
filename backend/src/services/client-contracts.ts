@@ -32,8 +32,135 @@ const measurement = z.strictObject({
   precision: z.enum(["stated_exact", "approximate"]),
 });
 
+const calendarDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((v) => {
+    const d = new Date(`${v}T00:00:00Z`);
+    return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+  });
+const datePreference = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("date"),
+    value: calendarDate,
+    raw_phrase: text(500),
+  }),
+  z.strictObject({
+    kind: z.literal("month"),
+    value: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+    raw_phrase: text(500),
+  }),
+  z
+    .strictObject({
+      kind: z.literal("date_range"),
+      start: calendarDate,
+      end: calendarDate,
+      raw_phrase: text(500),
+    })
+    .refine((v) => v.start <= v.end),
+  z.strictObject({
+    kind: z.literal("relative_duration"),
+    raw_phrase: text(500),
+    reference_date: calendarDate,
+    timezone: text(80).refine((v) => {
+      try {
+        new Intl.DateTimeFormat("en", { timeZone: v });
+        return true;
+      } catch {
+        return false;
+      }
+    }),
+  }),
+]);
+
+const entries = <T extends z.ZodType>(schema: T) =>
+  z
+    .array(schema)
+    .max(30)
+    .refine(
+      (rows) =>
+        new Set(rows.map((r) => (r as { entry_id: string }).entry_id)).size ===
+        rows.length,
+    );
+const localReference = z.strictObject({
+  entry_id: id,
+  label: text(240),
+  existing_or_proposed: z.enum(["existing", "proposed"]),
+  notes: text(1000).optional(),
+  source_refs: z.array(z.never()).length(0),
+});
+
 /** Closed Appendix E dictionary. No dot-path writes are performed from these names. */
 export const intakeFields: Record<string, z.ZodType> = {
+  "brief.scope.existing_professional_refs": entries(
+    z.strictObject({
+      entry_id: id,
+      name: text(120),
+      role: text(120),
+      contact: text(240).optional(),
+      notes: text(1000).optional(),
+    }),
+  ),
+  "brief.building.future_expansion": entries(
+    z.strictObject({
+      entry_id: id,
+      description: text(1000),
+      timing: text(240).optional(),
+    }),
+  ),
+  "brief.site.reported_conditions": entries(
+    z.strictObject({ entry_id: id, observation: text(1000) }),
+  ),
+  "brief.site.reported_service_availability": z
+    .strictObject({
+      water: text(500).optional(),
+      power: text(500).optional(),
+      drainage: text(500).optional(),
+      internet: text(500).optional(),
+      gas: text(500).optional(),
+    })
+    .refine((v) => Object.keys(v).length > 0),
+  "brief.spaces.additional_spaces": entries(
+    z.strictObject({
+      entry_id: id,
+      label: text(240),
+      category: text(120),
+      scope: z.enum(["present", "future", "alternative"]),
+      count: count.optional(),
+      notes: text(1000).optional(),
+    }),
+  ),
+  "brief.design.priorities": entries(
+    z.strictObject({
+      entry_id: id,
+      label: text(240),
+      rank: z.number().int().min(1).max(100).optional(),
+    }),
+  ),
+  "brief.design.reference_refs": entries(
+    z.strictObject({
+      entry_id: id,
+      label: text(240),
+      url: z
+        .url()
+        .max(2000)
+        .refine((v) => {
+          const u = new URL(v);
+          return u.protocol === "https:" && !u.username && !u.password;
+        }),
+    }),
+  ),
+  // Bytes and ownership are established only by the protected upload service.
+  "brief.documents.attachment_refs": z.array(z.never()).length(0),
+  "brief.documents.reported_approval_status": entries(
+    z.strictObject({
+      entry_id: id,
+      statement: text(1000),
+      reported_by: text(240).optional(),
+    }),
+  ),
+  "brief.renovation.target_areas": entries(localReference),
+  "brief.interior.reuse_items": entries(localReference),
   "brief.project.name": text(120),
   "brief.project.project_type": projectType,
   "brief.scope.work_nature": z.enum([
@@ -135,6 +262,9 @@ export const intakeFields: Record<string, z.ZodType> = {
     "firm_maximum",
     "undecided",
   ]),
+  "brief.timing.start_preference": datePreference,
+  "brief.timing.completion_preference": datePreference,
+  "brief.interior.possession_preference": datePreference,
   "brief.timing.deadline_reason": text(1000),
   "brief.documents.reported_available_types": z
     .array(z.enum(["survey", "drawing", "estimate", "reference", "other"]))

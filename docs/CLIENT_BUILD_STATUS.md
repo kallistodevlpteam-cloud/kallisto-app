@@ -13,7 +13,7 @@ doubles are isolated checks. Historical emulator evidence is not live evidence.
 | C01 Home | ClientHomePage / ClientGateway / auth/me, projects | Own projects; actions, milestones and notifications remain |
 | C02 Projects | ClientProjectsPage, IntakeListPanel / projects, intakes | Bounded lists; full filters/intake pagination remain |
 | C03 New project | ClientIntakePage / INTAKE_CREATE | One intake before project preparation; real enrollment policy required |
-| C04 Intake | ClientIntakePage / inputs, prepare, pause, resume | Versioned core manual fields; full 77-field editors, voice/text/Odin remain |
+| C04 Intake | ClientIntakePage / inputs, prepare, pause, resume | All 77 fields represented; 76 manual editors with structured types. Protected attachments and voice/text extraction/adoption remain |
 | C05 Review | BriefReviewPage / requirements, confirm | Immutable displayed hash; canonical intake review deep link remains |
 | C06 Discovery | ClientProvidersPage / providers | Published safe projection, current eligibility, bounded filtering/pagination; comparison remains |
 | C07 Profile/share | ClientProvidersPage, ShareBriefPanel / providers/:id, share-preview, share | Exact minimal disclosure and guarded idempotent share; portfolio/expanded disclosure/attachments remain |
@@ -30,19 +30,19 @@ doubles are isolated checks. Historical emulator evidence is not live evidence.
 | C18 Messages | ClientMessagesPage / conversations, messages | Context-authorized inbox/thread, durable text and bounded history; notifications/attachments remain |
 | C19 Payments | Not implemented | Cross-project authorized finance projection |
 | C20 FTP | Not implemented | Published findings and limitations; no inferred progress |
-| CS01 Settings | Account links / settings routes | Seven preference editors connected; complete index remains |
-| CS02 Profile | Read-only account name | Profile edit/avatar and verified contact workflows remain |
-| CS03 Appearance | Backend closed schema | Theme/density/motion UI and application remain |
+| CS01 Settings | Account links / settings routes | Ten profile/preference editors and payment-method capability page; access settings remain |
+| CS02 Profile | Versioned profile name editor / me/profile | Name edit implemented; avatar and verified contact workflows remain |
+| CS03 Appearance | ClientSettingsPage + controller theme | Theme, density and motion save and apply; device text scaling preserved |
 | CS04 Communication | ClientSettingsPage / PREFERENCES_GET/SAVE | Channel/language saved; quiet-hours editor remains |
 | CS05 Language/region | ClientSettingsPage / PREFERENCES_GET/SAVE | Canonical values saved; full locale/date/unit application remains |
 | CS06 Notifications | ClientSettingsPage / PREFERENCES_GET/SAVE | Channel toggles saved; reminder editor/transport remain |
 | CS07 Privacy | ClientSettingsPage / PREFERENCES_GET/SAVE | Optional preference toggles; consent/export/deletion workflows remain |
 | CS08 Security | Account + ClientSettingsPage | Recovery/signout/security preference; all-session revocation remains |
-| CS09 Billing | Backend closed schema | Contact editor remains |
-| CS10 Payment methods | Not implemented | Honest processor capability page; no card collection |
+| CS09 Billing | ClientSettingsPage / preferences | Contact and invoice preference editor connected |
+| CS10 Payment methods | Capability page | Processor unavailable; no card collection |
 | CS11 Project preferences | ClientSettingsPage / PREFERENCES_GET/SAVE | Default view/units saved; application and reminder editor remain |
 | CS12 Access | Not implemented | Actual grants, scoped invitation and revocation |
-| OD01 Odin | Provider adapters/tool-search foundation | Durable runs, quota, consent, exact intents and UI remain |
+| OD01 Odin | OdinPage / durable runs + jobs + tool search | Live Gemma, Nemotron, consent, bounded quota, recovery and run history; voice, intake adoption, exact write intents, production policy/scheduler remain |
 | MC01 Messages | ClientMessagesPage / message APIs | Source rechecked, immutable text, retry deduplication, closed state; attachments/unread/filters remain |
 | SUP01/SUP02 Support | ClientSupportPage / support APIs | Own case create/list/detail and scoped conversation; evidence, assignment and close actions remain |
 | A01 Invitation | Not implemented | Intended recipient verification and scoped acceptance |

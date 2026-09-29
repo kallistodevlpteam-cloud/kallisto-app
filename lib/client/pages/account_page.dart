@@ -93,6 +93,17 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
                 ),
                 const SizedBox(height: 8),
                 const KBadge('Client workspace'),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/odin'),
+                  child: const Text('Ask Odin'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    '/client/settings/payment-methods',
+                  ),
+                  child: const Text('Payment methods'),
+                ),
                 const SizedBox(height: 24),
                 TextButton.icon(
                   onPressed: () => Navigator.pushNamed(context, '/help'),

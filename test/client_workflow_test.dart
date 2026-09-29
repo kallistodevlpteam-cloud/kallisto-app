@@ -113,6 +113,48 @@ void main() {
     });
   }
   testWidgets(
+    'discard reload resets structured entries at the same saved revision',
+    (tester) async {
+      final gateway = WorkflowGateway();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: KTokens.theme(Brightness.light),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ClientIntakePage(gateway: gateway, intakeId: 'draft'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ChoiceChip, 'The idea'));
+      await tester.pumpAndSettle();
+      final add = find.widgetWithText(OutlinedButton, 'Add entry');
+      await tester.ensureVisible(add);
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Name'),
+        'Unsaved professional',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Role or scope'),
+        'Designer',
+      );
+      await tester.tap(find.text('Use this entry'));
+      await tester.pumpAndSettle();
+      expect(find.text('Unsaved professional'), findsOneWidget);
+      final reload = find.widgetWithText(TextButton, 'Reload saved draft');
+      await tester.ensureVisible(reload);
+      await tester.tap(reload);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Reload saved draft'));
+      await tester.pumpAndSettle();
+      expect(find.text('Unsaved professional'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
     'brief confirmation stays disabled until this version is reviewed',
     (tester) async {
       tester.view.physicalSize = const Size(390, 1500);

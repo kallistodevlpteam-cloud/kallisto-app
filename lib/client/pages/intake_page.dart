@@ -6,6 +6,8 @@ import '../client_controller.dart';
 import '../client_models.dart';
 import '../intake_fields.dart';
 import '../workflow_models.dart';
+import 'brief_structured_editor.dart';
+import 'brief_records_editor.dart';
 
 class ClientIntakePage extends StatefulWidget {
   const ClientIntakePage({
@@ -34,6 +36,7 @@ class _ClientIntakePageState extends State<ClientIntakePage> {
       _saveFingerprint = '',
       _prepareKey = '';
   int? _prepareRevision;
+  int _editorGeneration = 0;
   IntakeDraft? _draft;
   bool _busy = false, _dirty = false;
   @override
@@ -90,6 +93,7 @@ class _ClientIntakePageState extends State<ClientIntakePage> {
   }
 
   void _adopt(IntakeDraft value) {
+    _editorGeneration++;
     _draft = value;
     for (final field in briefFields) {
       final v = value.values[field.path];
@@ -97,6 +101,8 @@ class _ClientIntakePageState extends State<ClientIntakePage> {
           ? ''
           : field.kind == BriefFieldKind.money
           ? ((v as int) / 100).toStringAsFixed(2)
+          : field.kind == BriefFieldKind.records || v is Map
+          ? jsonEncode(v)
           : v is List
           ? v.join('\n')
           : v.toString();
@@ -149,7 +155,16 @@ class _ClientIntakePageState extends State<ClientIntakePage> {
           (parts.length == 1 ? 0 : int.parse(parts[1].padRight(2, '0')));
     }
     if (f.kind == BriefFieldKind.boolean) return s == 'true';
-    if (f.kind == BriefFieldKind.list) {
+    if ([
+      BriefFieldKind.measurement,
+      BriefFieldKind.sitePin,
+      BriefFieldKind.datePreference,
+      BriefFieldKind.records,
+      BriefFieldKind.serviceObservations,
+    ].contains(f.kind)) {
+      return jsonDecode(s);
+    }
+    if ([BriefFieldKind.list, BriefFieldKind.multiChoice].contains(f.kind)) {
       return s
           .split('\n')
           .map((e) => e.trim())
@@ -163,6 +178,33 @@ class _ClientIntakePageState extends State<ClientIntakePage> {
     if (_states[f.path] != 'provided') return null;
     final s = input?.trim() ?? '';
     if (s.isEmpty) return 'Enter a value or choose an answer status.';
+    if ([
+      BriefFieldKind.measurement,
+      BriefFieldKind.sitePin,
+      BriefFieldKind.datePreference,
+      BriefFieldKind.records,
+      BriefFieldKind.serviceObservations,
+    ].contains(f.kind)) {
+      if (f.kind == BriefFieldKind.records) {
+        try {
+          final entries = jsonDecode(s) as List;
+          return entries.isEmpty || entries.length > 30
+              ? 'Add between 1 and 30 entries.'
+              : null;
+        } catch (_) {
+          return 'Edit these entries again.';
+        }
+      }
+      return validateStructuredBrief(f, s);
+    }
+    if (f.path.endsWith('approximate_age_years') &&
+        !RegExp(r'^\d{1,4}(\.\d{1,2})?$').hasMatch(s)) {
+      return 'Enter a nonnegative age with up to two decimal places.';
+    }
+    if (f.kind == BriefFieldKind.multiChoice &&
+        s.split('\n').any((v) => !f.options.containsKey(v))) {
+      return 'Choose from the listed options.';
+    }
     if (f.kind == BriefFieldKind.count &&
         (!RegExp(r'^\d{1,7}$').hasMatch(s) || int.parse(s) > 1000000)) {
       return 'Enter a whole number from 0 to 1,000,000.';
@@ -348,9 +390,87 @@ class _ClientIntakePageState extends State<ClientIntakePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (options.isNotEmpty)
+          if (f.kind == BriefFieldKind.attachments)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(f.label),
+                const Text(
+                  'Protected document upload is not available yet. You can record the document types you have and continue your brief.',
+                ),
+              ],
+            )
+          else if (f.kind == BriefFieldKind.records)
+            BriefRecordsEditor(
+              key: ValueKey('${f.path}:$state:$_editorGeneration'),
+              field: f,
+              controller: _editors[f.path]!,
+              enabled: !_busy,
+              onChanged: () => setState(() {
+                _states[f.path] = _editors[f.path]!.text.isEmpty
+                    ? 'missing'
+                    : 'provided';
+                _dirty = true;
+              }),
+            )
+          else if ([
+            BriefFieldKind.measurement,
+            BriefFieldKind.sitePin,
+            BriefFieldKind.datePreference,
+            BriefFieldKind.records,
+            BriefFieldKind.serviceObservations,
+          ].contains(f.kind))
+            BriefStructuredEditor(
+              key: ValueKey('${f.path}:$state:$_editorGeneration'),
+              field: f,
+              controller: _editors[f.path]!,
+              enabled: !_busy,
+              onChanged: () => setState(() {
+                _states[f.path] = 'provided';
+                _dirty = true;
+              }),
+            )
+          else if (f.kind == BriefFieldKind.multiChoice)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(f.label),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final option in f.options.entries)
+                      FilterChip(
+                        label: Text(option.value),
+                        selected: _editors[f.path]!.text
+                            .split('\n')
+                            .contains(option.key),
+                        onSelected: _busy
+                            ? null
+                            : (selected) => setState(() {
+                                final values = _editors[f.path]!.text
+                                    .split('\n')
+                                    .where((v) => v.isNotEmpty)
+                                    .toSet();
+                                if (selected) {
+                                  values.add(option.key);
+                                } else {
+                                  values.remove(option.key);
+                                }
+                                _editors[f.path]!.text = values.join('\n');
+                                _states[f.path] = values.isEmpty
+                                    ? 'missing'
+                                    : 'provided';
+                                _dirty = true;
+                              }),
+                      ),
+                  ],
+                ),
+              ],
+            )
+          else if (options.isNotEmpty)
             DropdownButtonFormField<String>(
-              key: ValueKey('${f.path}:$state:${_draft!.revision}'),
+              key: ValueKey('${f.path}:$state:$_editorGeneration'),
               initialValue: state == 'provided' ? _editors[f.path]!.text : null,
               isExpanded: true,
               decoration: InputDecoration(labelText: f.label),

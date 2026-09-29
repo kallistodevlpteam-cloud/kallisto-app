@@ -144,7 +144,11 @@ class _ClientHomePageState extends State<ClientHomePage> {
                                   context,
                                   '/client/projects/new',
                                 )
-                              : null
+                              : () => Navigator.pushNamed(
+                                  context,
+                                  '/odin',
+                                  arguments: _draft.text,
+                                )
                         : () => Navigator.pushNamed(context, '/client/account'),
                     icon: Icon(
                       ready ? Icons.arrow_upward : Icons.login,
@@ -154,7 +158,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                       ready
                           ? _mode == 'Manual'
                                 ? 'Start my brief'
-                                : 'Odin is unavailable'
+                                : 'Open Odin'
                           : 'Sign in to continue',
                     ),
                   ),
@@ -162,7 +166,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     ready
                         ? _mode == 'Manual'
                               ? 'Review before you confirm.'
-                              : 'Text stays here until sending is available.'
+                              : 'Review processing permission before sending.'
                         : 'Your message has not been sent.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
