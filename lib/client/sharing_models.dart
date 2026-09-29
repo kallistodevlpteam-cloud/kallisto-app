@@ -6,10 +6,12 @@ class ClientEnquiry {
     this.projectId,
     this.status,
     this.title,
-    this.details,
-  );
+    this.details, {
+    this.conversationId,
+  });
   final String id, projectId, status, title;
   final Map<String, dynamic> details;
+  final String? conversationId;
   factory ClientEnquiry.fromJson(Object? value) {
     final row = objectValue(value),
         snapshot = objectValue(row['disclosure_snapshot']);
@@ -19,6 +21,7 @@ class ClientEnquiry {
       stringValue(row, 'status'),
       stringValue(snapshot, 'title'),
       objectValue(snapshot['permitted_details']),
+      conversationId: row['conversation_id'] as String?,
     );
   }
 }

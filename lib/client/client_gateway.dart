@@ -14,6 +14,7 @@ import 'workflow_models.dart';
 import 'settings_models.dart';
 import 'provider_models.dart';
 import 'sharing_models.dart';
+import 'message_models.dart';
 
 String clientIntentId() => List.generate(
   16,
@@ -21,6 +22,22 @@ String clientIntentId() => List.generate(
 ).join();
 
 abstract class ClientGateway {
+  Future<ClientPage<ClientThread>> conversations({String? cursor}) =>
+      throw UnimplementedError();
+  Future<ClientThread> conversation(String id) => throw UnimplementedError();
+  Future<ClientPage<ThreadMessage>> messages(String id, {String? cursor}) =>
+      throw UnimplementedError();
+  Future<void> sendMessage(String id, String text, String key) =>
+      throw UnimplementedError();
+  Future<ClientPage<SupportCase>> supportCases({String? cursor}) =>
+      throw UnimplementedError();
+  Future<SupportCase> supportCase(String id) => throw UnimplementedError();
+  Future<String> createSupportCase(
+    String category,
+    String subject,
+    String description,
+    String key,
+  ) => throw UnimplementedError();
   Future<EnquiryPage> enquiries({String? cursor}) => throw UnimplementedError();
   Future<ClientEnquiry> enquiry(String id) => throw UnimplementedError();
   Future<BriefDisclosure> previewShare(
@@ -74,6 +91,73 @@ abstract class ClientGateway {
 }
 
 class FirebaseClientGateway implements ClientGateway {
+  @override
+  Future<ClientPage<ClientThread>> conversations({String? cursor}) async =>
+      ClientPage.parse(
+        await _get('/v1/conversations', cursor: cursor),
+        ClientThread.fromJson,
+      );
+  @override
+  Future<ClientThread> conversation(String id) async => ClientThread.fromJson(
+    await _get('/v1/conversations/${Uri.encodeComponent(id)}'),
+  );
+  @override
+  Future<ClientPage<ThreadMessage>> messages(
+    String id, {
+    String? cursor,
+  }) async => ClientPage.parse(
+    await _get(
+      '/v1/conversations/${Uri.encodeComponent(id)}/messages',
+      cursor: cursor,
+    ),
+    ThreadMessage.fromJson,
+  );
+  @override
+  Future<void> sendMessage(String id, String text, String key) async {
+    await _get(
+      '/v1/conversations/${Uri.encodeComponent(id)}/messages',
+      method: 'POST',
+      commandKey: key,
+      payload: {
+        'text': text,
+        'attachment_refs': <Object>[],
+        'client_message_id': key,
+      },
+    );
+  }
+
+  @override
+  Future<ClientPage<SupportCase>> supportCases({String? cursor}) async =>
+      ClientPage.parse(
+        await _get('/v1/support/cases', cursor: cursor),
+        SupportCase.fromJson,
+      );
+  @override
+  Future<SupportCase> supportCase(String id) async => SupportCase.fromJson(
+    await _get('/v1/support/cases/${Uri.encodeComponent(id)}'),
+  );
+  @override
+  Future<String> createSupportCase(
+    String category,
+    String subject,
+    String description,
+    String key,
+  ) async => stringValue(
+    objectValue(
+      await _get(
+        '/v1/support/cases',
+        method: 'POST',
+        commandKey: key,
+        payload: {
+          'category': category,
+          'subject': subject,
+          'description': description,
+          'evidence_refs': <Object>[],
+        },
+      ),
+    ),
+    'case_id',
+  );
   @override
   Future<EnquiryPage> enquiries({String? cursor}) async =>
       EnquiryPage.fromJson(await _get('/v1/enquiries', cursor: cursor));

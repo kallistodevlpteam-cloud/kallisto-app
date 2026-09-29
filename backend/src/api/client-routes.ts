@@ -29,6 +29,14 @@ export function registerClientRoutes(
     meta: { correlation_id: request.id, schema_version: "kallisto.api.v1" },
   });
   const section = (request: FastifyRequest) => parse(z.strictObject({section:preferenceSection}), request.params).section;
+  const conversationId=(request:FastifyRequest)=>parse(z.strictObject({conversationId:id}),request.params).conversationId;
+  app.get('/v1/conversations',async request=>response(request,await workflows.communications.conversations((await identity(request)).uid,request.query)));
+  app.get('/v1/conversations/:conversationId',async request=>response(request,await workflows.communications.conversation((await identity(request)).uid,conversationId(request))));
+  app.get('/v1/conversations/:conversationId/messages',async request=>response(request,await workflows.communications.messages((await identity(request)).uid,conversationId(request),request.query)));
+  app.post('/v1/conversations/:conversationId/messages',async request=>response(request,await workflows.communications.send((await identity(request)).uid,conversationId(request),request.body,key(request))));
+  app.get('/v1/support/cases',async request=>response(request,await workflows.communications.cases((await identity(request)).uid,request.query)));
+  app.get('/v1/support/cases/:caseId',async request=>response(request,await workflows.communications.supportCase((await identity(request)).uid,parse(z.strictObject({caseId:id}),request.params).caseId)));
+  app.post('/v1/support/cases',async request=>response(request,await workflows.communications.createCase((await identity(request)).uid,request.body,key(request))));
   app.get('/v1/enquiries', async request=>response(request,
     await workflows.sharing.enquiries((await identity(request)).uid,request.query)));
   app.get('/v1/enquiries/:enquiryId', async request=>response(request,

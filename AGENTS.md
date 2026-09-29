@@ -97,3 +97,7 @@ tests without asking them to sign in. Use dedicated clearly identified QA
 identities and normal application flows on real Firebase. Do not repeatedly ask
 for permission already granted. This does not fabricate an approved enrollment
 notice, verified business, payment or another participant's consent.
+
+The user approved the concrete client-enrollment-v1 notice on 29 September 2026.
+It was published through the server operator with truthful audit attribution;
+see docs/ENROLLMENT_NOTICE_SETUP.md. Do not ask for that approval again.

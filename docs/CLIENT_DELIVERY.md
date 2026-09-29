@@ -2,6 +2,38 @@
 
 This records executed implementation and checks. **The full client phase in MASTER_SPEC is still unfinished.** SP work has not started.
 
+## Enrollment, support and messages checkpoint
+
+The user approved the concrete enrollment notice in this chat. It was published
+on 29 September through the trusted operator CLI with service-account audit
+attribution and a user-authorization reference. See ENROLLMENT_NOTICE_SETUP.md.
+Real Firebase enrollment now succeeds and the enrolled account survives reload.
+This supersedes the older enrollment-blocked statements below.
+
+Implemented responsive Help/support case creation, own case list/detail and
+context-bound text conversations. Authenticated people can request account help
+before enrollment. Each read/send rechecks the source case, enquiry or owned
+project, not just participant arrays. Messages are immutable, paginated and
+idempotent; uncertain retries retain their draft and identity. A separate
+successful message gets a fresh identity even for identical text. Latest history
+loads first and displays chronologically. Enquiry details link their actual thread.
+No arbitrary thread-creation action or project access grant is exposed.
+
+Live browser checks: QA client enrollment and reload, support case creation,
+opening its exact conversation, saving a message and full-page reload passed.
+Private intake creation, draft save, project preparation, exact brief confirmation
+and confirmed-version reload also passed on real Firebase.
+Evidence: [confirmed brief after reload](evidence/live-confirmed-brief.png).
+Evidence: [saved message after reload](evidence/live-support-message.png).
+These are clearly identified QA records in real Firebase, not emulator fixtures.
+
+Validation: Flutter analyzer passed, full 40-test suite passed; affected messaging
+and sharing tests passed after final fixes. Backend typecheck, lint and build
+passed; 49 unit tests passed, 8 emulator tests deliberately skipped. Live-config
+web release build passed. Support attachment/evidence transfer, staff assignment,
+case state actions, read receipts, inbox filters and notification delivery remain
+unfinished. The client phase is not complete; no Vercel deployment is claimed.
+
 ## Latest live-Firebase checkpoint
 
 The complete master, including O/P/Q, has now been read. See

@@ -113,9 +113,15 @@ class _ClientEnquiriesPageState extends State<ClientEnquiriesPage> {
                         '${entry.key.replaceFirst('brief.', '').replaceAll('_', ' ')}: ${entry.value}',
                       ),
                     ),
-                  const Text(
-                    'Offer comparison and enquiry messaging are still being connected.',
-                  ),
+                  const Text('Offer comparison is not available yet.'),
+                  if (item.conversationId != null)
+                    OutlinedButton(
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        '/messages/${Uri.encodeComponent(item.conversationId!)}',
+                      ),
+                      child: const Text('Open enquiry conversation'),
+                    ),
                   TextButton(
                     onPressed: () => Navigator.pushNamed(
                       context,

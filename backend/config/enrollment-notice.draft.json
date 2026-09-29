@@ -1,0 +1,7 @@
+{
+  "version": "client-enrollment-v1",
+  "text": "Create a personal Kallisto client workspace using your display name, preferred language and time zone. Project details are stored when you submit them. Sharing a brief, appointing a provider and approving project work are separate actions that require your review. Creating this workspace does not authorize AI or voice processing, payments, or construction work.",
+  "approved": false,
+  "approved_by_uid": "REPLACE_WITH_REAL_APPROVING_OWNER_UID",
+  "expected_features_version": 0
+}

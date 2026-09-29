@@ -113,7 +113,7 @@ class _EnrollmentPanelState extends State<EnrollmentPanel> {
             const LinearProgressIndicator()
           else if (_notice == null) ...[
             const Text(
-              'Account enrollment is currently unavailable. Your sign-in remains available; please retry later.',
+              'Your sign-in is working. Workspace creation is waiting for Kallisto’s enrollment notice to be configured. Retrying will work after that configuration is published.',
             ),
             TextButton(
               onPressed: _load,
@@ -147,6 +147,11 @@ class _EnrollmentPanelState extends State<EnrollmentPanel> {
               child: Text(_message),
             ),
           const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/help'),
+            icon: const Icon(Icons.help_outline),
+            label: const Text('Get account help'),
+          ),
           TextButton(
             onPressed: _busy ? null : widget.controller.signOut,
             child: const Text('Sign out'),

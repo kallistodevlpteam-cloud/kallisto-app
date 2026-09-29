@@ -10,6 +10,9 @@ export type RecordData = Record<string, unknown>;
 export interface StoreQuery {
   collection: string;
   filters?: readonly [string, unknown][];
+  arrayContains?: readonly [string, unknown];
+  order?: readonly [string, 'asc' | 'desc'];
+  cursorValue?: number;
   cursor?: string;
   limit?: number;
 }
@@ -31,8 +34,10 @@ export function firestoreRecordStore(db: Firestore): RecordStore {
     let result: Query = db.collection(input.collection);
     for (const [field, value] of input.filters ?? [])
       result = result.where(field, "==", value);
-    result = result.orderBy(FieldPath.documentId()).limit(input.limit ?? 21);
-    return input.cursor ? result.startAfter(input.cursor) : result;
+    if(input.arrayContains) result=result.where(input.arrayContains[0],'array-contains',input.arrayContains[1]);
+    if(input.order) result=result.orderBy(input.order[0],input.order[1]);
+    result = result.orderBy(FieldPath.documentId(), input.order?.[1] ?? 'asc').limit(input.limit ?? 21);
+    return input.cursor ? input.order ? result.startAfter(input.cursorValue,input.cursor) : result.startAfter(input.cursor) : result;
   }
   const reader = (tx?: Transaction): RecordReader => ({
     async get(path) {

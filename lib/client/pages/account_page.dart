@@ -94,6 +94,11 @@ class _ClientAccountPageState extends State<ClientAccountPage> {
                 const SizedBox(height: 8),
                 const KBadge('Client workspace'),
                 const SizedBox(height: 24),
+                TextButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/help'),
+                  icon: const Icon(Icons.help_outline),
+                  label: const Text('Help & support'),
+                ),
                 for (final section in clientSettingsSections.entries)
                   ListTile(
                     contentPadding: EdgeInsets.zero,

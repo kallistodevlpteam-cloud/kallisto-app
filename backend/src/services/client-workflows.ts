@@ -15,6 +15,7 @@ import { ServiceError } from "./errors.js";
 import { ClientSettingsService } from './client-settings.js';
 import { ProviderDirectory } from './provider-directory.js';
 import { ClientSharing } from './client-sharing.js';
+import { ClientCommunications } from './client-communications.js';
 import {
   canonical,
   confirmInput,
@@ -80,17 +81,25 @@ const groupsSchema = z.object({
 type Session = z.infer<typeof sessionSchema>;
 type Result = Record<string, string | number | boolean | null>;
 const noticeSchema = z.object({
-  policy_version: z.string(),
-  approved_by_uid: z.string().min(1),
+  policy_version: z.string().optional(),
+  approved_by_uid: z.string().min(1).optional(),
   values: z.object({
     client_enrollment_notice: z.object({
-      version: z.string(),
+      version: z.string().min(1),
       text: z.string().min(1).max(8000),
+      approval: z.object({
+        kind: z.literal('operator'),
+        principal: z.string().min(1),
+        authorization_reference: z.string().min(1),
+      }).optional(),
     }),
   }),
-});
+}).refine(value => Boolean(value.values.client_enrollment_notice.approval ||
+  (value.policy_version && value.approved_by_uid)));
+
 
 export class ClientWorkflows {
+  get communications() { return new ClientCommunications(this.store); }
   get sharing() { return new ClientSharing(this.store, (tx,uid)=>this.access(tx,uid),this.providers); }
   get providers() { return new ProviderDirectory(this.store, (tx, uid) => this.access(tx, uid)); }
   get settings() { return new ClientSettingsService(this.store, (tx, uid) => this.access(tx, uid)); }
@@ -162,7 +171,7 @@ export class ClientWorkflows {
     return {
       client_enrollment: notice.success,
       enrollment_notice: notice.success
-        ? notice.data.values.client_enrollment_notice
+        ? {version: notice.data.values.client_enrollment_notice.version, text: notice.data.values.client_enrollment_notice.text}
         : null,
       manual_intake: true,
       odin_text: false,

@@ -7,6 +7,8 @@ import 'pages/account_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/providers_page.dart';
 import 'pages/enquiries_page.dart';
+import 'pages/messages_page.dart';
+import 'pages/support_page.dart';
 import 'pages/home_page.dart';
 import 'pages/projects_page.dart';
 import 'pages/intake_page.dart';
@@ -71,6 +73,14 @@ class _ClientShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final uri = Uri.parse(path);
     final parts = uri.pathSegments;
+    final messageRoute =
+        parts.isNotEmpty && parts[0] == 'messages' && parts.length <= 2;
+    final supportRoute =
+        uri.path == '/help' ||
+        (parts.length == 3 && parts[0] == 'support' && parts[1] == 'cases');
+    final signedIn =
+        controller.connection == ClientConnection.ready ||
+        controller.connection == ClientConnection.enrollment;
     final enquiryRoute =
         parts.length >= 2 &&
         parts.length <= 3 &&
@@ -96,7 +106,11 @@ class _ClientShell extends StatelessWidget {
         parts[0] == 'client' &&
         parts[1] == 'projects' &&
         parts[3] == 'requirements';
-    final index = enquiryRoute
+    final index = messageRoute
+        ? 3
+        : supportRoute
+        ? 4
+        : enquiryRoute
         ? 2
         : providerDetail
         ? 2
@@ -120,7 +134,21 @@ class _ClientShell extends StatelessWidget {
     }
 
     final Widget page;
-    if (enquiryRoute) {
+    if (messageRoute || supportRoute) {
+      page = !signedIn
+          ? ConnectionPanel(controller: controller)
+          : messageRoute
+          ? ClientMessagesPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              conversationId: parts.length == 2 ? parts[1] : null,
+            )
+          : ClientSupportPage(
+              key: ValueKey('${controller.snapshot?.uid}:$path'),
+              gateway: controller.gateway,
+              caseId: parts.length == 3 ? parts[2] : null,
+            );
+    } else if (enquiryRoute) {
       page = controller.connection != ClientConnection.ready
           ? ConnectionPanel(controller: controller)
           : ClientEnquiriesPage(
@@ -177,13 +205,13 @@ class _ClientShell extends StatelessWidget {
                   key: ValueKey(controller.snapshot?.uid),
                   gateway: controller.gateway,
                 ),
-        3 => _PendingPage(
-          controller: controller,
-          title: 'Your conversations',
-          icon: Icons.chat_bubble_outline,
-          description:
-              'Messaging is not available yet. Project conversations will appear here once secure messaging is connected.',
-        ),
+        3 =>
+          !signedIn
+              ? ConnectionPanel(controller: controller)
+              : ClientMessagesPage(
+                  key: ValueKey(controller.snapshot?.uid),
+                  gateway: controller.gateway,
+                ),
         4 => ClientAccountPage(controller: controller),
         _ => const ClientEmptyState(
           icon: Icons.search_off,
@@ -382,33 +410,4 @@ class _ClientShell extends StatelessWidget {
       },
     );
   }
-}
-
-class _PendingPage extends StatelessWidget {
-  const _PendingPage({
-    required this.controller,
-    required this.title,
-    required this.description,
-    required this.icon,
-  });
-  final ClientController controller;
-  final String title;
-  final String description;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(title, style: Theme.of(context).textTheme.headlineLarge),
-      const SizedBox(height: 28),
-      if (controller.connection != ClientConnection.ready)
-        ConnectionPanel(controller: controller)
-      else
-        ClientEmptyState(
-          icon: icon,
-          title: 'Not available yet',
-          description: description,
-        ),
-    ],
-  );
 }

@@ -18,7 +18,7 @@ doubles are isolated checks. Historical emulator evidence is not live evidence.
 | C06 Discovery | ClientProvidersPage / providers | Published safe projection, current eligibility, bounded filtering/pagination; comparison remains |
 | C07 Profile/share | ClientProvidersPage, ShareBriefPanel / providers/:id, share-preview, share | Exact minimal disclosure and guarded idempotent share; portfolio/expanded disclosure/attachments remain |
 | C08 Enquiries | ClientEnquiriesPage / enquiries | Own source-authorized frozen enquiries and paging; status filters remain |
-| C09 Enquiry/offers | ClientEnquiriesPage / enquiries/:id | Shared details viewer; exact offer getters/comparison/selection and conversations remain |
+| C09 Enquiry/offers | ClientEnquiriesPage / enquiries/:id | Shared details viewer; exact offer getters/comparison/selection remain; linked conversation implemented |
 | C10 Overview | ProjectOverviewPage / project detail | Basic project/brief/policy state; modules remain |
 | C11 Documents | Not implemented | Submitted immutable versions, protected bytes, exact decisions |
 | C12 BOQ | Not implemented | Baselines, variations, exact review and non-overlapping totals |
@@ -27,7 +27,7 @@ doubles are isolated checks. Historical emulator evidence is not live evidence.
 | C15 Money | Not implemented | Source-separated amounts, claims and settlement evidence |
 | C16 Reviews | Not implemented | Typed dispatch, exact source/version decisions and funding |
 | C17 Handover | Not implemented | Exact manifest review; separate completion/aftercare |
-| C18 Messages | Unavailable panel | Authorized conversations, messages, notifications |
+| C18 Messages | ClientMessagesPage / conversations, messages | Context-authorized inbox/thread, durable text and bounded history; notifications/attachments remain |
 | C19 Payments | Not implemented | Cross-project authorized finance projection |
 | C20 FTP | Not implemented | Published findings and limitations; no inferred progress |
 | CS01 Settings | Account links / settings routes | Seven preference editors connected; complete index remains |
@@ -43,8 +43,8 @@ doubles are isolated checks. Historical emulator evidence is not live evidence.
 | CS11 Project preferences | ClientSettingsPage / PREFERENCES_GET/SAVE | Default view/units saved; application and reminder editor remain |
 | CS12 Access | Not implemented | Actual grants, scoped invitation and revocation |
 | OD01 Odin | Provider adapters/tool-search foundation | Durable runs, quota, consent, exact intents and UI remain |
-| MC01 Messages | Not implemented | Source-rechecked context threads and immutable messages |
-| SUP01/SUP02 Support | Not implemented | Own cases, actual persistence and scoped conversation |
+| MC01 Messages | ClientMessagesPage / message APIs | Source rechecked, immutable text, retry deduplication, closed state; attachments/unread/filters remain |
+| SUP01/SUP02 Support | ClientSupportPage / support APIs | Own case create/list/detail and scoped conversation; evidence, assignment and close actions remain |
 | A01 Invitation | Not implemented | Intended recipient verification and scoped acceptance |
 
 ## Current verification limits
@@ -66,8 +66,8 @@ durable notification intent; notification transport is not yet delivered.
 Live preview uses project kallisto-db1, localhost:8080 and API localhost:4000.
 With the user's autonomous-testing authorization, a dedicated real Firebase QA
 identity passed signup/reload and sign-out/sign-in/reload in the live browser.
-See evidence/live-firebase-session-restored.png. Enrollment is still blocked by
-the absence of an approved live enrollment notice; no notice, business approval
-or construction policy was fabricated. Native Firebase registration and Vercel
+See evidence/live-firebase-session-restored.png. The user-approved enrollment notice was published with operator attribution;
+real QA enrollment, account reload, support creation and message reload passed.
+No business approval or construction policy was fabricated. Native Firebase registration and Vercel
 release validation remain outstanding. Do not request the user's login again for
 QA work that can use the dedicated test identity.
